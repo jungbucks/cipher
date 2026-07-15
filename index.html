@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>암호의 세계 — 시각화로 배우는 암호학</title>
+<style>
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-1Thin.woff2') format('woff2'); font-weight:100; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-2ExtraLight.woff2') format('woff2'); font-weight:200; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-3Light.woff2') format('woff2'); font-weight:300; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2'); font-weight:400; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-5Medium.woff2') format('woff2'); font-weight:500; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2'); font-weight:600; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2'); font-weight:700; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-8ExtraBold.woff2') format('woff2'); font-weight:800; font-display:swap; }
+@font-face { font-family:'Paperozi'; src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-9Black.woff2') format('woff2'); font-weight:900; font-display:swap; }
+:root{
+  --bg:#FBF9F6;--s1:#FFFFFF;--s2:#F5F1EB;--s3:#EDE6DA;
+  --border:#E2D9CC;--text:#1C1917;--dim:#57534E;--dim2:#78716C;
+  --mono:'Courier New',Courier,monospace;
+  --amber:#C2770A;--amber-bg:#FEF3C7;--amber-mid:#D97706;
+  --plum:#6D28D9;--plum-bg:#EDE9FE;
+  --teal:#0D7377;--teal-bg:#CCFBF1;
+  --rose:#BE185D;--rose-bg:#FCE7F3;
+  --green:#15803D;--green-bg:#DCFCE7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Paperozi','Pretendard','Apple SD Gothic Neo','Malgun Gothic','Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+/* subtle warm grain texture */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.6}
+
+/* header */
+.site-header{padding:52px 24px 36px;text-align:center;position:relative;z-index:1}
+.site-header::after{content:'';display:block;width:240px;height:1px;background:linear-gradient(90deg,transparent,var(--amber-mid),transparent);margin:32px auto 0;opacity:.5}
+.site-eyebrow{font-size:11px;font-weight:700;letter-spacing:.22em;color:var(--amber);text-transform:uppercase;margin-bottom:14px;opacity:.9}
+.site-title{font-size:clamp(30px,6vw,54px);font-weight:900;letter-spacing:-.025em;background:linear-gradient(135deg,#D97706 0%,#C2410C 48%,#7C3AED 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;margin-bottom:14px}
+.site-sub{font-size:15px;color:var(--dim);line-height:1.7;max-width:460px;margin:0 auto}
+
+/* nav */
+.nav{display:flex;gap:0;justify-content:center;padding:0 24px 0;overflow-x:auto;scrollbar-width:none;border-bottom:1.5px solid var(--border);position:relative;z-index:1}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{padding:14px 22px;background:none;border:none;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;font-size:14px;font-weight:600;color:var(--dim2);cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.nav-btn:hover{color:var(--text)}
+.nav-btn.active{color:var(--amber);border-bottom-color:var(--amber-mid)}
+
+/* page */
+.page{display:none;max-width:900px;margin:0 auto;padding:36px 24px 80px;position:relative;z-index:1}
+.page.active{display:block}
+
+/* cipher header */
+.cipher-hd{margin-bottom:28px}
+.cipher-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:12px}
+.cipher-name{font-size:26px;font-weight:800;letter-spacing:-.015em;margin-bottom:10px;color:var(--text)}
+.cipher-desc{font-size:14px;color:var(--dim);line-height:1.75;max-width:640px}
+
+/* card */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.03)}
+.card-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2);margin-bottom:14px}
+
+/* input */
+.inp{width:100%;padding:10px 14px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-size:15px;font-family:var(--mono);outline:none;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:var(--amber-mid);box-shadow:0 0 0 3px rgba(217,119,6,.1)}
+.inp::placeholder{color:var(--dim2)}
+
+/* label row */
+.label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.lbl{font-size:13px;font-weight:600;color:var(--dim)}
+.lbl-val{font-size:14px;font-weight:800;color:var(--amber);font-family:var(--mono)}
+
+/* slider */
+.slider{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--s3);outline:none;margin:10px 0}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber-mid);cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.2),0 0 0 3px rgba(217,119,6,.15);transition:transform .15s,box-shadow .15s}
+.slider::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 2px 8px rgba(0,0,0,.25),0 0 0 4px rgba(217,119,6,.2)}
+.slider::-moz-range-thumb{width:20px;height:20px;border:none;border-radius:50%;background:var(--amber-mid);cursor:pointer}
+
+/* chips */
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 16px;border:1.5px solid var(--border);border-radius:999px;background:var(--s1);font-size:13px;font-weight:600;color:var(--dim);cursor:pointer;font-family:inherit;transition:all .15s}
+.chip:hover{border-color:var(--amber-mid);color:var(--amber)}
+.chip.active{background:var(--amber-bg);border-color:var(--amber-mid);color:var(--amber);font-weight:700}
+.chip.active.purple{background:var(--plum-bg);border-color:var(--plum);color:var(--plum)}
+
+/* btn */
+.btn{padding:10px 26px;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-cyan{background:var(--amber-mid);color:#fff}
+.btn-cyan:hover{background:var(--amber);transform:translateY(-1px);box-shadow:0 4px 12px rgba(194,119,10,.3)}
+.btn-cyan:active{transform:translateY(0)}
+.btn-ghost{background:var(--s2);border:1.5px solid var(--border);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--amber-mid);color:var(--amber)}
+
+/* output area */
+.output-area{min-height:52px;padding:12px 16px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;font-family:var(--mono);font-size:16px;letter-spacing:.05em;line-height:1.75;word-break:break-all;transition:border-color .15s}
+.char-out{display:inline;transition:all .2s}
+.char-out.lit{color:var(--amber);font-weight:700}
+.char-out.done{color:var(--green);font-weight:600}
+.char-out.space{opacity:.3}
+
+/* ====== CAESAR WHEEL ====== */
+.wheel-wrap{display:flex;justify-content:center;margin:8px 0 16px}
+#wheelSvg{overflow:visible;filter:drop-shadow(0 4px 20px rgba(194,119,10,.12))}
+.outer-letter{font-size:12px;font-weight:700;fill:#78716C;font-family:var(--mono);transition:all .3s;cursor:default}
+.inner-letter{font-size:12px;font-weight:700;fill:#6D28D9;font-family:var(--mono);transition:all .3s}
+.outer-letter.hl{fill:#92400E;font-size:13px}
+.inner-letter.hl{fill:#C2410C;font-size:13px}
+#innerRing{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.wheel-label{font-size:10px;font-weight:700;letter-spacing:.1em;fill:#78716C;font-family:inherit}
+
+/* map table */
+.map-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:4px}
+.map-table td{padding:5px 0;text-align:center;border:1px solid var(--s3)}
+.map-plain{color:var(--dim2);background:var(--s2)}
+.map-cipher{color:var(--amber)}
+.map-plain.hl{background:var(--amber-bg);color:var(--amber)}
+.map-cipher.hl{background:var(--amber-bg);color:#92400E;font-weight:700}
+
+/* ====== RAIL FENCE ====== */
+.rf-grid{display:grid;gap:3px;margin:8px 0;overflow-x:auto;padding:16px 14px}
+/* 가로 스크롤 힌트 — 스크롤 가능할 때만 가장자리에 그림자 표시 */
+.rf-grid, .col-grid{
+  background:
+    linear-gradient(to right, var(--bg) 22%, transparent) 0 0/36px 100% no-repeat,
+    linear-gradient(to left, var(--bg) 22%, transparent) 100% 0/36px 100% no-repeat,
+    radial-gradient(farthest-side at 0 50%, rgba(60,40,20,.16), transparent) 0 0/15px 100% no-repeat,
+    radial-gradient(farthest-side at 100% 50%, rgba(60,40,20,.16), transparent) 100% 0/15px 100% no-repeat;
+  background-attachment: local, local, scroll, scroll;
+}
+.rf-grid::-webkit-scrollbar,.col-grid::-webkit-scrollbar{height:8px}
+.rf-grid::-webkit-scrollbar-thumb,.col-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.rf-grid::-webkit-scrollbar-track,.col-grid::-webkit-scrollbar-track{background:transparent}
+.rf-cell{width:32px;height:32px;border:1.5px solid var(--s3);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;transition:all .3s;opacity:0;transform:translateY(-8px);background:var(--s2);color:transparent}
+.rf-cell.show{opacity:1;transform:translateY(0)}
+.rf-cell.rail-0{border-color:rgba(194,119,10,.35);background:rgba(254,243,199,.6);color:var(--amber)}
+.rf-cell.rail-1{border-color:rgba(109,40,217,.3);background:rgba(237,233,254,.6);color:var(--plum)}
+.rf-cell.rail-2{border-color:rgba(13,115,119,.3);background:rgba(204,251,241,.6);color:var(--teal)}
+.rf-cell.rail-3{border-color:rgba(190,24,93,.3);background:rgba(252,231,243,.6);color:var(--rose)}
+.rf-cell.empty{border-color:transparent;background:transparent}
+.rf-cell.read-hl{box-shadow:0 0 0 2px currentColor,0 2px 8px rgba(0,0,0,.1);transform:scale(1.1)}
+.rf-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+.rf-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--dim)}
+.rf-leg-dot{width:10px;height:10px;border-radius:50%}
+
+/* ====== COLUMNAR ====== */
+.col-grid{overflow-x:auto;margin:8px 0}
+.col-table{border-collapse:collapse;font-family:var(--mono);font-size:14px}
+.col-table td,.col-table th{width:36px;height:36px;text-align:center;border:1px solid var(--s3);transition:all .35s}
+.col-table th{font-size:11px;font-weight:800;letter-spacing:.06em;background:var(--s2);border-color:var(--border);color:var(--dim)}
+.col-table th.sorted{color:var(--teal);background:rgba(13,115,119,.08);border-color:rgba(13,115,119,.3)}
+.col-table td.fill{color:var(--dim)}
+.col-table td.pad{color:var(--border)}
+.col-reading{display:flex;gap:4px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:9px}
+.col-read-ch{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--dim2);transition:all .25s;padding:2px 3px;border-radius:4px}
+.col-read-ch.lit{color:var(--teal);background:rgba(13,115,119,.1);font-weight:800}
+
+/* result row */
+.result-row{display:flex;align-items:flex-start;gap:12px;margin-top:14px}
+.result-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2);padding-top:3px;white-space:nowrap}
+.result-text{font-family:var(--mono);font-size:16px;letter-spacing:.05em;color:var(--green);word-break:break-all;line-height:1.7;font-weight:600}
+.copy-mini{padding:4px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-weight:700;color:var(--dim);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.copy-mini:hover{border-color:var(--green);color:var(--green);background:var(--green-bg)}
+
+/* ====== CONCEPT PAGES ====== */
+.concept-intro{background:linear-gradient(135deg,var(--amber-bg) 0%,var(--s1) 100%);border:1.5px solid rgba(217,119,6,.2);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.concept-intro.pubkey{background:linear-gradient(135deg,var(--plum-bg) 0%,var(--s1) 100%);border-color:rgba(109,40,217,.2)}
+.flow-wrap{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin:14px 0 8px;padding:0 4px}
+.flow-node{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.flow-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.flow-lbl{font-size:10px;font-weight:700;color:var(--dim);text-align:center;letter-spacing:.02em;max-width:60px}
+.flow-key{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 12px;border-radius:10px;border:1.5px dashed;font-size:11px;font-weight:700;min-width:72px;text-align:center;flex-shrink:0}
+.flow-arrow{font-size:18px;color:var(--dim2);margin:0 3px;padding-top:16px;flex-shrink:0}
+.flow-msg-box{padding:7px 12px;border-radius:8px;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.05em;text-align:center;border:1.5px solid}
+.prop-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.prop-card{padding:15px 16px;border-radius:12px;border:1.5px solid var(--border)}
+.prop-card-icon{font-size:20px;margin-bottom:7px}
+.prop-card-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim2);margin-bottom:5px}
+.prop-card-body{font-size:13px;color:var(--text);line-height:1.55}
+.alg-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.alg-chip{padding:4px 13px;border-radius:999px;font-size:12px;font-weight:700;font-family:var(--mono);border:1.5px solid}
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:var(--s2);color:var(--dim2);border:1px solid var(--border)}
+.cmp-table td{padding:11px 14px;border:1px solid var(--s3);line-height:1.5;vertical-align:top;color:var(--text)}
+.cmp-table tr:nth-child(even) td{background:var(--s2)}
+.badge-sym{display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;background:var(--amber-bg);color:var(--amber);border:1px solid rgba(194,119,10,.25)}
+.badge-asym{display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;background:var(--plum-bg);color:var(--plum);border:1px solid rgba(109,40,217,.25)}
+.https-flow{display:flex;align-items:stretch;gap:1px;background:var(--s3);border-radius:12px;overflow:hidden;margin:12px 0}
+.https-step{flex:1;padding:16px 12px;background:var(--s1);display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.https-step-num{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--dim2)}
+.https-step-icon{font-size:20px}
+.https-step-title{font-size:12px;font-weight:700;color:var(--text)}
+.https-step-desc{font-size:11px;color:var(--dim);line-height:1.4}
+.https-step.sym .https-step-num{color:var(--amber)}
+.https-step.asym .https-step-num{color:var(--plum)}
+
+@media(max-width:600px){
+  .site-title{font-size:28px}
+  .nav-btn{padding:11px 14px;font-size:13px}
+  .page{padding:22px 14px 60px}
+  .rf-cell{width:26px;height:26px;font-size:11px}
+  .col-table td,.col-table th{width:28px;height:28px;font-size:12px}
+  .prop-grid{grid-template-columns:1fr}
+  .flow-wrap{gap:1px}
+  .flow-arrow{font-size:13px;padding-top:14px;margin:0 1px}
+  .https-flow{flex-direction:column;background:transparent;gap:8px}
+  .https-step{border-radius:10px;border:1px solid var(--border)}
+}
+
+/* ====== 확인 문제 (QUIZ) ====== */
+.quiz{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:20px 22px;margin-top:18px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.quiz-hd{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:16px}
+.quiz-item{margin-bottom:18px}
+.quiz-item:last-child{margin-bottom:0}
+.quiz-q{font-size:15px;font-weight:700;color:var(--text);margin-bottom:11px;line-height:1.6}
+.quiz-q-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--amber-bg);color:var(--amber);font-size:12px;font-weight:800;margin-right:7px}
+.quiz-opts{display:flex;flex-direction:column;gap:8px}
+.quiz-opt{text-align:left;padding:11px 14px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;font-size:14px;color:var(--text);cursor:pointer;font-family:inherit;font-weight:600;transition:border-color .15s,background .15s}
+.quiz-opt:hover:not(:disabled){border-color:var(--amber-mid)}
+.quiz-opt:disabled{cursor:default}
+.quiz-opt.correct{background:var(--green-bg);border-color:var(--green);color:var(--green)}
+.quiz-opt.wrong{background:rgba(190,24,93,.08);border-color:var(--rose);color:var(--rose)}
+.quiz-fb{margin-top:11px;font-size:13.5px;line-height:1.65;padding:11px 14px;border-radius:9px;display:none}
+.quiz-fb.show{display:block}
+.quiz-fb.ok{background:var(--green-bg);color:#166534;border:1px solid rgba(21,128,61,.2)}
+.quiz-fb.no{background:rgba(190,24,93,.06);color:#9F1239;border:1px solid rgba(190,24,93,.2)}
+
+/* ====== 직접 열어보기 (인터랙션) ====== */
+.ci{display:flex;flex-direction:column;gap:12px}
+.ci-locked{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:16px;font-weight:800;padding:9px 15px;background:var(--s3);border-radius:10px;border:1px solid var(--border);align-self:flex-start}
+.ci-keys{display:flex;gap:8px;flex-wrap:wrap}
+.ci-key-btn{padding:9px 15px;border-radius:9px;border:1.5px solid var(--border);background:var(--s1);font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s}
+.ci-key-btn:hover{border-color:var(--amber-mid);background:var(--s2)}
+.ci-out{font-size:14px;font-weight:600;padding:11px 15px;border-radius:9px;display:none;line-height:1.65}
+.ci-out.show{display:block}
+.ci-out.ok{background:var(--green-bg);color:#166534;border:1px solid rgba(21,128,61,.2)}
+.ci-out.no{background:rgba(190,24,93,.06);color:#9F1239;border:1px solid rgba(190,24,93,.2);animation:ciShake .35s}
+@keyframes ciShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* 입력 안내 (영문 외 문자 감지 시) */
+.inp-note{display:none;font-size:12px;font-weight:600;color:var(--rose);margin-top:6px}
+.inp-note.show{display:block}
+
+/* ====== 브루트포스 해독 도전 ====== */
+#bfList{display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:340px;overflow-y:auto;padding-right:4px}
+.bf-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:7px 12px;background:var(--s2);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-family:inherit;opacity:0;transform:translateY(-4px);transition:opacity .25s,transform .25s,border-color .15s,background .15s}
+.bf-row.show{opacity:1;transform:none}
+.bf-row:hover{border-color:var(--amber-mid)}
+.bf-shift{font-size:11px;font-weight:800;color:var(--dim2);min-width:60px;font-family:var(--mono)}
+.bf-text{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);letter-spacing:.04em}
+.bf-row.hit{background:var(--green-bg);border-color:var(--green)}
+.bf-row.hit .bf-text,.bf-row.hit .bf-shift{color:var(--green)}
+
+/* ====== 해시 함수 ====== */
+.hash-out{font-family:var(--mono);font-size:12.5px;word-break:break-all;line-height:1.7;padding:10px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;letter-spacing:.03em;color:var(--dim)}
+.hash-out .hd{color:var(--rose);font-weight:800;background:var(--rose-bg);border-radius:2px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-eyebrow">정보 교과 | 암호학 시각화</div>
+  <h1 class="site-title">암호의 세계</h1>
+  <p class="site-sub">암호화와 복호화가 어떻게 일어나는지, 눈으로 직접 확인해보세요.</p>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('caesar')">🔄 시저 암호</button>
+  <button class="nav-btn" onclick="showPage('railfence')">🚂 레일 펜스</button>
+  <button class="nav-btn" onclick="showPage('columnar')">📊 열 전치</button>
+  <button class="nav-btn" onclick="showPage('symmetric')">🔑 대칭 키</button>
+  <button class="nav-btn" onclick="showPage('pubkey')">🔐 공개 키</button>
+  <button class="nav-btn" onclick="showPage('hash')">#️⃣ 해시 함수</button>
+</nav>
+
+<!-- ===== CAESAR ===== -->
+<section class="page active" id="page-caesar">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(194,119,10,.1);color:var(--amber)">치환형 암호</div>
+    <div class="cipher-name">시저 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Caesar Cipher)</span></div>
+    <div class="cipher-desc">알파벳을 일정한 수만큼 밀어서 다른 글자로 바꾸는 가장 오래된 암호입니다. 로마의 율리우스 카이사르가 군사 통신에 사용했다고 전해집니다.</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="grid-column:1/-1">
+      <div class="card">
+        <div class="card-title">알파벳 휠 — 아래 슬라이더를 움직이면 안쪽 고리가 돌아가요</div>
+        <div class="wheel-wrap">
+          <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300">
+            <circle cx="150" cy="150" r="148" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="150" cy="150" r="108" fill="none" stroke="var(--border)" stroke-width="1"/>
+            <circle cx="150" cy="150" r="68"  fill="var(--s2)" stroke="var(--s3)" stroke-width="1"/>
+            <g id="outerLetters"></g>
+            <g id="innerRing">
+              <circle cx="150" cy="150" r="105" fill="rgba(109,40,217,.04)" stroke="rgba(109,40,217,.15)" stroke-width="1.5"/>
+              <g id="innerLetters"></g>
+            </g>
+            <text x="150" y="155" text-anchor="middle" class="wheel-label" style="font-size:10px;fill:var(--dim)">평문</text>
+            <text x="150" y="167" text-anchor="middle" class="wheel-label" style="font-size:9px;fill:var(--plum)">암호문</text>
+            <circle cx="150" cy="4" r="4" fill="var(--amber-mid)" opacity=".9"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="label-row"><span class="lbl">평문 입력</span></div>
+      <input id="caesarInput" class="inp" placeholder="HELLO WORLD" oninput="caesarLive();latinNote('caesarInput','caesarNote')" style="margin-bottom:2px">
+      <div class="inp-note" id="caesarNote">⚠️ 영문 알파벳만 암호화돼요 — 한글·숫자·기호는 자동으로 빠집니다</div>
+      <div style="margin-bottom:10px"></div>
+      <div class="label-row">
+        <span class="lbl">이동 칸 수 (Shift)</span>
+        <span class="lbl-val" id="shiftVal">3</span>
+      </div>
+      <input id="shiftSlider" type="range" min="1" max="25" value="3" class="slider" oninput="caesarShiftChange(this.value)">
+      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+        <button class="btn btn-cyan" onclick="caesarAnimate()">▶ 암호화 시각화</button>
+        <button class="btn btn-ghost" onclick="caesarReset()">초기화</button>
+        <div class="chip-row" style="margin-left:auto">
+          <button class="chip active" id="cMode1" onclick="setCMode('enc')">암호화</button>
+          <button class="chip" id="cMode2" onclick="setCMode('dec')">복호화</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">결과</div>
+      <div id="caesarOutput" class="output-area" style="min-height:80px"></div>
+      <div class="result-row" style="margin-top:8px">
+        <span class="result-label">전체</span>
+        <span id="caesarFull" class="result-text" style="font-size:14px"></span>
+        <button class="copy-mini" onclick="copyText('caesarFull')">복사</button>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">매핑 테이블 (shift = <span id="mapShiftLabel">3</span>)</div>
+      <div style="overflow-x:auto">
+        <table class="map-table" id="mapTable">
+          <tr id="mapPlain"></tr>
+          <tr id="mapCipher"></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-title">🕵️ 해독 도전 — 열쇠 없이 부수기 (브루트포스)</div>
+      <p style="font-size:13.5px;color:var(--dim);line-height:1.7;margin-bottom:10px">
+        적의 암호문을 가로챘습니다: <span class="ci-locked" style="margin:0 2px">🔒 <span id="bfCipher"></span></span><br>
+        shift가 몇인지는 모릅니다. 하지만 열쇠는 <b>25개뿐</b> — 전부 시도한 뒤, <b>말이 되는 영어 문장을 찾아 클릭</b>하세요!
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-cyan" onclick="bfRun()">▶ 25가지 전부 시도</button>
+        <button class="btn btn-ghost" onclick="bfNew()">🔀 새 암호문 가로채기</button>
+      </div>
+      <div id="bfList"></div>
+      <div class="ci-out" id="bfOut" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="caesar"></div>
+</section>
+
+<!-- ===== RAIL FENCE ===== -->
+<section class="page" id="page-railfence">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(109,40,217,.1);color:var(--plum)">전치형 암호</div>
+    <div class="cipher-name">레일 펜스 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Rail Fence Cipher)</span></div>
+    <div class="cipher-desc">글자를 지그재그(W자) 모양으로 여러 줄(레일)에 써넣은 뒤, 줄 순서대로 읽어내는 전치형 암호입니다. 글자의 순서가 바뀔 뿐 글자 자체는 변하지 않습니다.</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+      <div style="flex:1;min-width:180px">
+        <div class="label-row"><span class="lbl">입력 텍스트</span></div>
+        <input id="rfInput" class="inp" placeholder="WEAREDISCOVERED" value="WEAREDISCOVERED" oninput="latinNote('rfInput','rfNote')">
+        <div class="inp-note" id="rfNote">⚠️ 영문 알파벳만 지원돼요 — 그 외 글자(공백 포함)는 자동으로 빠집니다</div>
+      </div>
+      <div>
+        <div class="label-row"><span class="lbl">레일 수</span><span class="lbl-val" id="rfRailVal">3</span></div>
+        <input id="rfRails" type="range" min="2" max="4" value="3" class="slider" style="width:120px" oninput="document.getElementById('rfRailVal').textContent=this.value">
+      </div>
+      <div class="chip-row">
+        <button class="chip active purple" id="rfMode1" onclick="setRFMode('enc')">암호화</button>
+        <button class="chip" id="rfMode2" onclick="setRFMode('dec')">복호화</button>
+      </div>
+      <button class="btn btn-cyan" onclick="rfVisualize()">▶ 시각화</button>
+    </div>
+
+    <div class="card-title">지그재그 배열</div>
+    <div id="rfGrid" class="rf-grid"></div>
+    <div id="rfLegend" class="rf-legend"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">레일별 문자 읽기</div>
+    <div id="rfRailRead" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="result-row" style="margin-top:14px">
+      <span class="result-label">결과</span>
+      <span id="rfResult" class="result-text"></span>
+      <button class="copy-mini" onclick="copyText('rfResult')">복사</button>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="railfence"></div>
+</section>
+
+<!-- ===== COLUMNAR ===== -->
+<section class="page" id="page-columnar">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(13,115,119,.1);color:var(--teal)">전치형 암호</div>
+    <div class="cipher-name">열 전치 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Columnar Transposition)</span></div>
+    <div class="cipher-desc">평문을 격자(표)에 채운 뒤, 키워드의 알파벳 순서대로 열을 읽어 암호문을 만드는 전치형 암호입니다.</div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+      <div style="flex:2;min-width:160px">
+        <div class="label-row"><span class="lbl" id="colInputLabel">평문</span></div>
+        <input id="colInput" class="inp" placeholder="WEAREDISCOVERED" value="WEAREDISCOVERED" oninput="latinNote('colInput','colNote')">
+        <div class="inp-note" id="colNote">⚠️ 영문 알파벳만 지원돼요 — 그 외 글자(공백 포함)는 자동으로 빠집니다</div>
+      </div>
+      <div style="flex:1;min-width:100px">
+        <div class="label-row"><span class="lbl">키워드</span></div>
+        <input id="colKey" class="inp" placeholder="ZEBRA" value="ZEBRA" oninput="colKeyChange()">
+      </div>
+      <div class="chip-row">
+        <button class="chip active" id="colMode1" onclick="setColMode('enc')">암호화</button>
+        <button class="chip" id="colMode2" onclick="setColMode('dec')">복호화</button>
+      </div>
+      <button class="btn btn-cyan" onclick="colVisualize()">▶ 시각화</button>
+    </div>
+
+    <div class="card-title">격자 배열</div>
+    <div class="col-grid"><table class="col-table" id="colTable"></table></div>
+    <div id="colKeyOrder" style="margin-top:8px;font-size:13px;color:var(--dim2)"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" id="colReadTitle">열 순서대로 읽기 (키 정렬 순)</div>
+    <div id="colReading" class="col-reading"></div>
+    <div class="result-row" style="margin-top:14px">
+      <span class="result-label">결과</span>
+      <span id="colResult" class="result-text"></span>
+      <button class="copy-mini" onclick="copyText('colResult')">복사</button>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="columnar"></div>
+</section>
+
+<!-- ===== SYMMETRIC KEY ===== -->
+<section class="page" id="page-symmetric">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(194,119,10,.1);color:var(--amber)">대칭 키 암호화</div>
+    <div class="cipher-name">Symmetric Key Encryption</div>
+    <div class="cipher-desc">암호화와 복호화에 같은 키를 사용하는 방식. 빠르고 효율적이지만 키를 어떻게 안전하게 공유할지가 가장 큰 과제입니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">작동 원리</div>
+    <div class="concept-intro">
+      <div style="font-size:14px;color:var(--dim);line-height:1.7">송신자와 수신자가 <strong style="color:var(--amber)">동일한 비밀 키</strong>를 공유합니다. 송신자는 이 키로 평문을 암호화하고, 수신자는 같은 키로 복호화합니다.</div>
+    </div>
+    <div class="flow-wrap">
+      <div class="flow-node"><div class="flow-icon" style="background:var(--amber-bg)">👩</div><div class="flow-lbl">송신자 (Alice)</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--green-bg);color:var(--green);border-color:rgba(21,128,61,.2)">HELLO</div><div class="flow-lbl">평문</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(194,119,10,.4);color:var(--amber);background:var(--amber-bg)"><span style="font-size:18px">🔑</span><span>비밀 키 K</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--s3)">🔒</div><div class="flow-lbl">암호화</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--s3);color:var(--dim);border-color:var(--border)">XK9#!</div><div class="flow-lbl">암호문</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(194,119,10,.4);color:var(--amber);background:var(--amber-bg)"><span style="font-size:18px">🔑</span><span>동일 키 K</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--s3)">🔓</div><div class="flow-lbl">복호화</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--green-bg);color:var(--green);border-color:rgba(21,128,61,.2)">HELLO</div><div class="flow-lbl">복원된 평문</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--amber-bg)">👨</div><div class="flow-lbl">수신자 (Bob)</div></div>
+    </div>
+    <div style="padding:10px 14px;background:var(--amber-bg);border-radius:8px;border:1px solid rgba(194,119,10,.2);font-size:13px;color:var(--amber);font-weight:600">⚠️ 핵심 문제: 둘 다 같은 키를 가져야 하는데, 이 키를 어떻게 안전하게 전달할까요?</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">특징</div>
+    <div class="prop-grid">
+      <div class="prop-card" style="background:var(--green-bg);border-color:rgba(21,128,61,.2)"><div class="prop-card-icon">⚡</div><div class="prop-card-title">빠른 속도</div><div class="prop-card-body">공개 키 방식 대비 100~1000배 빠름. 대용량 데이터 암호화에 적합</div></div>
+      <div class="prop-card" style="background:var(--green-bg);border-color:rgba(21,128,61,.2)"><div class="prop-card-icon">📦</div><div class="prop-card-title">단순한 구조</div><div class="prop-card-body">키 하나로 암복호화 모두 처리. 구현이 상대적으로 단순하고 하드웨어 최적화 용이</div></div>
+      <div class="prop-card" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.18)"><div class="prop-card-icon">🔑</div><div class="prop-card-title">키 배포 문제</div><div class="prop-card-body">사전에 안전한 채널로 키를 공유해야 함. 첫 번째 공유 자체가 보안 취약점</div></div>
+      <div class="prop-card" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.18)"><div class="prop-card-icon">📊</div><div class="prop-card-title">키 수 폭발적 증가</div><div class="prop-card-body">n명 통신 시 n(n-1)/2개 키 필요. 10명 → 45개, 100명 → 4,950개</div></div>
+    </div>
+    <div class="card-title" style="margin-top:4px">대표 알고리즘</div>
+    <div class="alg-chips">
+      <span class="alg-chip" style="background:var(--amber-bg);color:var(--amber);border-color:rgba(194,119,10,.3)">AES-128/256</span>
+      <span class="alg-chip" style="background:var(--amber-bg);color:var(--amber);border-color:rgba(194,119,10,.3)">ChaCha20</span>
+      <span class="alg-chip" style="background:var(--s3);color:var(--dim);border-color:var(--border)">DES (구식)</span>
+      <span class="alg-chip" style="background:var(--s3);color:var(--dim);border-color:var(--border)">3DES (구식)</span>
+    </div>
+    <div style="margin-top:12px;font-size:13px;color:var(--dim);line-height:1.6">현재 표준은 <strong>AES (Advanced Encryption Standard)</strong>. 128/192/256비트 키를 지원하며 전 세계 금융, 정부, 통신 시스템에서 사용됩니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">실생활 활용 사례</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">💾</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">디스크·파일 암호화</div><div style="font-size:12px;color:var(--dim);line-height:1.5">BitLocker, FileVault — 같은 사람이 키를 쓰므로 키 배포 문제 없음</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">🔒</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">HTTPS 세션 데이터</div><div style="font-size:12px;color:var(--dim);line-height:1.5">핸드셰이크 후 실제 웹 데이터는 AES로 빠르게 전송</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">📱</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">메시지 앱 E2E</div><div style="font-size:12px;color:var(--dim);line-height:1.5">Signal, WhatsApp 종단간 암호화의 실제 메시지 암호화 부분</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">🌐</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">VPN·WiFi 보안</div><div style="font-size:12px;color:var(--dim);line-height:1.5">WPA3, OpenVPN — 미리 공유된 키(PSK)로 무선 통신 보호</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔑 직접 해보기 — 같은 키만 열 수 있어요</div>
+    <div class="ci">
+      <div class="ci-locked">🔒 <span>XK9#!</span> <span style="font-size:12px;color:var(--dim);font-weight:400">비밀 키 K로 잠근 메시지</span></div>
+      <div style="font-size:13px;color:var(--dim)">어떤 키로 열어볼까요?</div>
+      <div class="ci-keys">
+        <button class="ci-key-btn" onclick="ciTry('sym','K')">🔑 비밀 키 K</button>
+        <button class="ci-key-btn" onclick="ciTry('sym','X')">🔑 다른 키 X</button>
+      </div>
+      <div class="ci-out" id="ci-sym-out"></div>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="symmetric"></div>
+</section>
+
+<!-- ===== PUBLIC KEY ===== -->
+<section class="page" id="page-pubkey">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(109,40,217,.1);color:var(--plum)">공개 키 암호화</div>
+    <div class="cipher-name">Public Key Encryption <span style="font-size:16px;color:var(--dim);font-weight:400">(비대칭 암호화)</span></div>
+    <div class="cipher-desc">서로 다른 두 개의 키(공개 키 + 개인 키)를 사용하는 방식. 키 배포 문제를 해결하고 디지털 서명도 가능하게 합니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">1. 암호화 — 공개 키로 잠그고, 개인 키로 열기</div>
+    <div class="concept-intro pubkey">
+      <div style="font-size:14px;color:var(--dim);line-height:1.7">Bob은 <strong style="color:var(--plum)">공개 키</strong>를 전 세계에 공개합니다. 누구나 공개 키로 메시지를 잠글 수 있지만, 오직 Bob의 <strong style="color:var(--rose)">개인 키</strong>만 열 수 있습니다.</div>
+    </div>
+    <div class="flow-wrap">
+      <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">👩</div><div class="flow-lbl">Alice</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--green-bg);color:var(--green);border-color:rgba(21,128,61,.2)">HELLO</div><div class="flow-lbl">평문</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(109,40,217,.4);color:var(--plum);background:var(--plum-bg)"><span style="font-size:17px">🔓</span><span>Bob 공개 키</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--s3)">🔒</div><div class="flow-lbl">암호화</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--s3);color:var(--dim);border-color:var(--border)">9xK#!</div><div class="flow-lbl">암호문</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(190,24,93,.4);color:var(--rose);background:var(--rose-bg)"><span style="font-size:17px">🗝️</span><span>Bob 개인 키</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--s3)">🔓</div><div class="flow-lbl">복호화</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--green-bg);color:var(--green);border-color:rgba(21,128,61,.2)">HELLO</div><div class="flow-lbl">복원된 평문</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">👨</div><div class="flow-lbl">Bob</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">2. 디지털 서명 — 개인 키로 서명하고, 공개 키로 검증</div>
+    <div class="concept-intro pubkey" style="margin-bottom:14px">
+      <div style="font-size:14px;color:var(--dim);line-height:1.7">반대 방향: Alice가 <strong style="color:var(--rose)">개인 키</strong>로 서명하면, 누구나 Alice의 <strong style="color:var(--plum)">공개 키</strong>로 "Alice가 직접 서명한 것이 맞다"고 검증할 수 있습니다.</div>
+    </div>
+    <div class="flow-wrap">
+      <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">👩</div><div class="flow-lbl">Alice</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--s2);color:var(--text);border-color:var(--border)">문서</div><div class="flow-lbl">원본 문서</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(190,24,93,.4);color:var(--rose);background:var(--rose-bg)"><span style="font-size:17px">🗝️</span><span>Alice 개인 키</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--s3)">✍️</div><div class="flow-lbl">서명 생성</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--rose-bg);color:var(--rose);border-color:rgba(190,24,93,.2)">서명값</div><div class="flow-lbl">디지털 서명</div></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-key" style="border-color:rgba(109,40,217,.4);color:var(--plum);background:var(--plum-bg)"><span style="font-size:17px">🔓</span><span>Alice 공개 키</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--green-bg)">✅</div><div class="flow-lbl">서명 검증</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">🌍</div><div class="flow-lbl">누구나</div></div>
+    </div>
+    <div style="font-size:13px;color:var(--dim);line-height:1.6;margin-top:10px;padding:10px 14px;background:var(--plum-bg);border-radius:8px;border:1px solid rgba(109,40,217,.15)">📌 이를 통해 <strong>부인 방지(Non-repudiation)</strong>가 가능합니다. 오직 Alice만 자신의 개인 키를 갖고 있으므로, 서명된 문서는 Alice가 발행한 것임을 수학적으로 증명합니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">특징</div>
+    <div class="prop-grid">
+      <div class="prop-card" style="background:var(--green-bg);border-color:rgba(21,128,61,.2)"><div class="prop-card-icon">🎉</div><div class="prop-card-title">키 배포 문제 해결</div><div class="prop-card-body">공개 키는 누구에게나 공개해도 됨. 사전 공유 없이 처음 만나는 상대방과도 안전하게 통신 가능</div></div>
+      <div class="prop-card" style="background:var(--green-bg);border-color:rgba(21,128,61,.2)"><div class="prop-card-icon">✍️</div><div class="prop-card-title">디지털 서명</div><div class="prop-card-body">신원 인증, 무결성 검증, 부인 방지 모두 가능. 전자계약·공동인증서(구 공인인증서) 기반</div></div>
+      <div class="prop-card" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.18)"><div class="prop-card-icon">🐌</div><div class="prop-card-title">느린 속도</div><div class="prop-card-body">대칭 키 대비 수백~수천 배 느림. 대용량 데이터 직접 암호화에는 부적합</div></div>
+      <div class="prop-card" style="background:rgba(220,38,38,.05);border-color:rgba(220,38,38,.18)"><div class="prop-card-icon">🔢</div><div class="prop-card-title">수학적 난제 기반</div><div class="prop-card-body">소인수분해(RSA), 이산로그(ECC)의 어려움에 의존. 양자 컴퓨터 시대 위협 대비 중</div></div>
+    </div>
+    <div class="card-title" style="margin-top:4px">대표 알고리즘</div>
+    <div class="alg-chips">
+      <span class="alg-chip" style="background:var(--plum-bg);color:var(--plum);border-color:rgba(109,40,217,.3)">RSA-2048/4096</span>
+      <span class="alg-chip" style="background:var(--plum-bg);color:var(--plum);border-color:rgba(109,40,217,.3)">ECC / ECDSA</span>
+      <span class="alg-chip" style="background:var(--plum-bg);color:var(--plum);border-color:rgba(109,40,217,.3)">Diffie-Hellman</span>
+      <span class="alg-chip" style="background:var(--teal-bg);color:var(--teal);border-color:rgba(13,115,119,.3)">Ed25519 (최신)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">대칭 키 vs 공개 키 비교</div>
+    <div style="overflow-x:auto">
+      <table class="cmp-table">
+        <tr><th>항목</th><th><span class="badge-sym">대칭 키</span></th><th><span class="badge-asym">공개 키 (비대칭)</span></th></tr>
+        <tr><td>키 수</td><td>1개 (공유)</td><td>2개 (공개 키 + 개인 키)</td></tr>
+        <tr><td>속도</td><td>⚡ 매우 빠름</td><td>🐌 느림 (100~1000배 차이)</td></tr>
+        <tr><td>키 배포</td><td>사전 공유 필요 (취약점)</td><td>공개 키는 자유롭게 배포 가능</td></tr>
+        <tr><td>디지털 서명</td><td>불가능</td><td>가능 (인증·부인방지)</td></tr>
+        <tr><td>주요 용도</td><td>파일/디스크/세션 암호화</td><td>키 교환, 인증서, 전자서명</td></tr>
+        <tr><td>대표 알고리즘</td><td>AES, ChaCha20</td><td>RSA, ECC, Diffie-Hellman</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">실전: HTTPS는 두 방식을 모두 씁니다 (하이브리드)</div>
+    <div style="font-size:13px;color:var(--dim);margin-bottom:12px;line-height:1.6">속도(대칭)와 안전한 키 배포(공개 키)의 장점을 모두 취하는 <strong>하이브리드 방식</strong>이 실제 인터넷에서 사용됩니다.</div>
+    <div class="https-flow">
+      <div class="https-step asym"><div class="https-step-num">STEP 1</div><div class="https-step-icon">📜</div><div class="https-step-title">서버 인증서 전송</div><div class="https-step-desc">서버가 공개 키 담긴 인증서(RSA/ECC)를 브라우저에 전송. CA가 서명하여 신뢰성 보증</div></div>
+      <div class="https-step asym"><div class="https-step-num">STEP 2</div><div class="https-step-icon">🤝</div><div class="https-step-title">세션 키 협의</div><div class="https-step-desc">Diffie-Hellman 등으로 대칭 세션 키를 공개 채널에서 안전하게 합의</div></div>
+      <div class="https-step sym"><div class="https-step-num">STEP 3</div><div class="https-step-icon">⚡</div><div class="https-step-title">데이터 고속 전송</div><div class="https-step-desc">이후 실제 웹 데이터는 AES 세션 키로 빠르게 암복호화하여 전송</div></div>
+    </div>
+    <div style="font-size:12px;color:var(--dim2);line-height:1.5;text-align:center;margin-top:4px">공개 키로 "안전한 키 배포" 해결 → 대칭 키로 "빠른 데이터 통신" 처리</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔐 직접 해보기 — 개인 키만 열 수 있어요</div>
+    <div class="ci">
+      <div class="ci-locked">🔒 <span>9xK#!</span> <span style="font-size:12px;color:var(--dim);font-weight:400">Bob의 공개 키로 잠근 메시지</span></div>
+      <div style="font-size:13px;color:var(--dim)">어떤 키로 열어볼까요?</div>
+      <div class="ci-keys">
+        <button class="ci-key-btn" onclick="ciTry('pub','alice-priv')">🗝️ Alice 개인 키</button>
+        <button class="ci-key-btn" onclick="ciTry('pub','bob-pub')">🔓 Bob 공개 키</button>
+        <button class="ci-key-btn" onclick="ciTry('pub','bob-priv')">🗝️ Bob 개인 키</button>
+      </div>
+      <div class="ci-out" id="ci-pub-out"></div>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="pubkey"></div>
+</section>
+
+<!-- ===== HASH ===== -->
+<section class="page" id="page-hash">
+  <div class="cipher-hd">
+    <div class="cipher-tag" style="background:rgba(21,128,61,.1);color:var(--green)">단방향 함수</div>
+    <div class="cipher-name">해시 함수 <span style="font-size:16px;color:var(--dim);font-weight:400">(Hash Function)</span></div>
+    <div class="cipher-desc">어떤 길이의 입력이든 <b>고정 길이의 '지문'</b>으로 바꾸는 함수입니다. 암호화와 달리 <b>되돌릴 수 없어서</b>(단방향) 비밀번호 저장과 무결성 검증에 쓰입니다.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">작동 원리</div>
+    <div class="flow-wrap">
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--green-bg);color:var(--green);border-color:rgba(21,128,61,.2)">아무 입력</div><div class="flow-lbl">1글자든 책 한 권이든</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--green-bg)">🌪️</div><div class="flow-lbl">해시 함수 (SHA-256)</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node"><div class="flow-msg-box" style="background:var(--s3);color:var(--dim);border-color:var(--border)">a94b…f3</div><div class="flow-lbl">항상 64자 지문</div></div>
+      <div class="flow-arrow" style="color:var(--rose)">⇸</div>
+      <div class="flow-node"><div class="flow-icon" style="background:var(--rose-bg)">🚫</div><div class="flow-lbl">역방향 불가!</div></div>
+    </div>
+    <div style="padding:10px 14px;background:var(--green-bg);border-radius:8px;border:1px solid rgba(21,128,61,.2);font-size:13px;color:var(--green);font-weight:600">📌 같은 입력은 언제나 같은 지문, 입력이 <b>한 글자만</b> 달라져도 지문은 완전히 달라집니다(눈사태 효과).</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👀 눈사태 효과 — 한 글자의 나비효과 (실시간 SHA-256)</div>
+    <div style="display:grid;grid-template-columns:1fr;gap:12px">
+      <div>
+        <div class="label-row"><span class="lbl">입력 A</span></div>
+        <input id="hashA" class="inp" value="HELLO" oninput="hashLive()" style="margin-bottom:8px">
+        <div class="hash-out" id="hashAOut"></div>
+      </div>
+      <div>
+        <div class="label-row"><span class="lbl">입력 B</span><span class="lbl-val" id="hashDiffCnt" style="color:var(--rose)"></span></div>
+        <input id="hashB" class="inp" value="HELLO!" oninput="hashLive()" style="margin-bottom:8px">
+        <div class="hash-out" id="hashBOut"></div>
+      </div>
+    </div>
+    <div style="font-size:12.5px;color:var(--dim2);margin-top:10px;line-height:1.6">💡 B의 해시에서 <b style="color:var(--rose)">분홍색</b>은 A와 다른 자리예요. 느낌표 하나 차이로 거의 전부 바뀌죠? 참고로 여긴 <b>한글도 됩니다</b> — 해시는 어떤 데이터든 받거든요.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">암호화 vs 해시 — 헷갈리면 안 되는 차이</div>
+    <div style="overflow-x:auto">
+      <table class="cmp-table">
+        <tr><th>항목</th><th>암호화 (대칭·공개 키)</th><th><span style="display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green);border:1px solid rgba(21,128,61,.25)">해시</span></th></tr>
+        <tr><td>방향</td><td>양방향 — 키가 있으면 <b>복호화 가능</b></td><td>단방향 — <b>원래 값으로 복원 불가</b></td></tr>
+        <tr><td>출력 길이</td><td>입력에 따라 달라짐</td><td>항상 고정 (SHA-256 = 64자)</td></tr>
+        <tr><td>키</td><td>필요</td><td>불필요</td></tr>
+        <tr><td>목적</td><td>기밀성 (내용 숨기기)</td><td>무결성 검증 · 비밀번호 저장</td></tr>
+        <tr><td>대표 알고리즘</td><td>AES, RSA</td><td>SHA-256, SHA-3 <span style="color:var(--dim2)">(MD5·SHA-1은 구식)</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">실생활 활용 사례</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">🔑</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">비밀번호 저장</div><div style="font-size:12px;color:var(--dim);line-height:1.5">사이트는 비밀번호 <b>원문이 아니라 해시만</b> 저장. 유출돼도 원문을 알 수 없고, 로그인 때는 입력값의 해시를 대조</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">📥</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">파일 무결성 검증</div><div style="font-size:12px;color:var(--dim);line-height:1.5">다운로드 파일의 해시(체크섬)를 공식 값과 비교 — 한 비트라도 변조되면 지문이 달라져 즉시 탄로</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">⛓️</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">블록체인</div><div style="font-size:12px;color:var(--dim);line-height:1.5">각 블록이 이전 블록의 해시를 품고 있어, 과거 기록을 몰래 고치면 사슬 전체가 어긋남</div></div>
+      <div style="padding:14px;background:var(--s2);border-radius:10px;border:1px solid var(--border)"><div style="font-size:20px;margin-bottom:6px">✍️</div><div style="font-size:13px;font-weight:700;margin-bottom:4px">디지털 서명의 재료</div><div style="font-size:12px;color:var(--dim);line-height:1.5">문서 전체 대신 <b>문서의 해시</b>에 서명 — 공개 키 탭의 서명 흐름과 이어지는 이야기</div></div>
+    </div>
+  </div>
+  <div class="quiz-mount" data-quiz="hash"></div>
+</section>
+
+<script>
+// ======================== UTILS ========================
+const ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function clean(s){return s.toUpperCase().replace(/[^A-Z ]/g,'');}
+/* 영문 외 문자가 입력되면 안내 문구 표시 (한글이 조용히 사라지는 혼란 방지) */
+function latinNote(inpId,noteId){
+  const v=document.getElementById(inpId).value;
+  document.getElementById(noteId).classList.toggle('show',/[^A-Za-z ]/.test(v));
+}
+function copyText(id){
+  const el=document.getElementById(id);
+  navigator.clipboard.writeText(el.textContent).catch(()=>{});
+  const orig=el.style.color;el.style.color='var(--amber)';
+  setTimeout(()=>el.style.color=orig,800);
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ======================== CAESAR ========================
+let caesarMode='enc';
+let caesarAnimTimer=null;
+
+function setCMode(m){
+  caesarMode=m;
+  document.getElementById('cMode1').classList.toggle('active',m==='enc');
+  document.getElementById('cMode2').classList.toggle('active',m==='dec');
+  caesarLive();
+}
+
+function buildWheel(){
+  const r1=128,r2=95,cx=150,cy=150;
+  const outer=document.getElementById('outerLetters');
+  const inner=document.getElementById('innerLetters');
+  outer.innerHTML=''; inner.innerHTML='';
+  for(let i=0;i<26;i++){
+    const a=(i/26)*Math.PI*2 - Math.PI/2;
+    const x1=cx+r1*Math.cos(a), y1=cy+r1*Math.sin(a);
+    const x2=cx+r2*Math.cos(a), y2=cy+r2*Math.sin(a);
+    const t1=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t1.setAttribute('x',x1);t1.setAttribute('y',y1+4);
+    t1.setAttribute('text-anchor','middle');t1.setAttribute('class','outer-letter');
+    t1.setAttribute('id','ol'+i);t1.textContent=ALPHA[i];
+    outer.appendChild(t1);
+    const t2=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t2.setAttribute('x',x2);t2.setAttribute('y',y2+4);
+    t2.setAttribute('text-anchor','middle');t2.setAttribute('class','inner-letter');
+    t2.setAttribute('id','il'+i);t2.textContent=ALPHA[i];
+    inner.appendChild(t2);
+  }
+}
+
+function caesarShiftChange(v){
+  document.getElementById('shiftVal').textContent=v;
+  document.getElementById('mapShiftLabel').textContent=v;
+  const deg=(v/26)*360;
+  document.getElementById('innerRing').style.transform=`rotate(${deg}deg)`;
+  document.getElementById('innerRing').style.transformOrigin='150px 150px';
+  updateMapTable(+v);
+  caesarLive();
+}
+
+function updateMapTable(shift){
+  const plain=document.getElementById('mapPlain');
+  const cipher=document.getElementById('mapCipher');
+  plain.innerHTML=''; cipher.innerHTML='';
+  for(let i=0;i<26;i++){
+    const td1=document.createElement('td');td1.className='map-plain';td1.textContent=ALPHA[i];td1.id='mp'+i;
+    const td2=document.createElement('td');td2.className='map-cipher';
+    const enc=(i+shift)%26;
+    const dec=(i-shift+26)%26;
+    td2.textContent=caesarMode==='enc'?ALPHA[enc]:ALPHA[dec];td2.id='mc'+i;
+    plain.appendChild(td1); cipher.appendChild(td2);
+  }
+}
+
+function caesarEncode(s,shift,enc){
+  return s.split('').map(c=>{
+    if(c===' ')return ' ';
+    const i=ALPHA.indexOf(c);
+    if(i<0)return c;
+    return enc?ALPHA[(i+shift)%26]:ALPHA[(i-shift+26)%26];
+  }).join('');
+}
+
+function caesarLive(){
+  const s=clean(document.getElementById('caesarInput').value);
+  const shift=+document.getElementById('shiftSlider').value;
+  const result=caesarEncode(s,shift,caesarMode==='enc');
+  document.getElementById('caesarOutput').innerHTML=result.split('').map((c,i)=>
+    `<span class="char-out done" id="co${i}">${c==' '?'&nbsp;':c}</span>`).join('');
+  document.getElementById('caesarFull').textContent=result;
+  updateMapTable(shift);
+}
+
+function caesarAnimate(){
+  if(caesarAnimTimer)clearTimeout(caesarAnimTimer);
+  const s=clean(document.getElementById('caesarInput').value)||'HELLO';
+  if(!document.getElementById('caesarInput').value) document.getElementById('caesarInput').value='HELLO';
+  const shift=+document.getElementById('shiftSlider').value;
+  const enc=caesarMode==='enc';
+  const chars=s.split('');
+
+  document.getElementById('caesarOutput').innerHTML=chars.map((c,i)=>
+    `<span class="char-out" id="co${i}">${c==' '?'&nbsp;':c}</span>`).join('');
+  document.getElementById('caesarFull').textContent='';
+
+  // reset wheel highlights
+  for(let i=0;i<26;i++){
+    document.getElementById('ol'+i)?.classList.remove('hl');
+    document.getElementById('il'+i)?.classList.remove('hl');
+  }
+
+  let result='';
+  function step(i){
+    if(i>=chars.length){
+      document.getElementById('caesarFull').textContent=result;
+      return;
+    }
+    const c=chars[i];
+    const el=document.getElementById('co'+i);
+    if(c===' '){el.className='char-out space done';result+=' ';step(i+1);return;}
+    const idx=ALPHA.indexOf(c);
+    const outIdx=enc?(idx+shift)%26:(idx-shift+26)%26;
+    const outC=ALPHA[outIdx];
+
+    // highlight map table
+    for(let j=0;j<26;j++){document.getElementById('mp'+j)?.classList.remove('hl');document.getElementById('mc'+j)?.classList.remove('hl');}
+    document.getElementById('mp'+idx)?.classList.add('hl');
+    document.getElementById('mc'+idx)?.classList.add('hl');
+    // highlight wheel
+    for(let j=0;j<26;j++){document.getElementById('ol'+j)?.classList.remove('hl');document.getElementById('il'+j)?.classList.remove('hl');}
+    document.getElementById('ol'+idx)?.classList.add('hl');
+    document.getElementById('il'+outIdx)?.classList.add('hl');
+
+    el.classList.add('lit');
+    caesarAnimTimer=setTimeout(()=>{
+      el.textContent=outC;
+      el.classList.remove('lit');el.classList.add('done');
+      result+=outC;
+      caesarAnimTimer=setTimeout(()=>step(i+1),120);
+    },280);
+  }
+  step(0);
+}
+
+function caesarReset(){
+  document.getElementById('caesarInput').value='';
+  document.getElementById('caesarOutput').innerHTML='';
+  document.getElementById('caesarFull').textContent='';
+  for(let i=0;i<26;i++){document.getElementById('ol'+i)?.classList.remove('hl');document.getElementById('il'+i)?.classList.remove('hl');}
+}
+
+// ======================== RAIL FENCE ========================
+let rfMode='enc';
+function setRFMode(m){
+  rfMode=m;
+  document.getElementById('rfMode1').classList.toggle('active',m==='enc');
+  document.getElementById('rfMode2').classList.toggle('active',m==='dec');
+}
+
+const RAIL_COLORS=['var(--amber-mid)','var(--plum)','var(--teal)','var(--rose)'];
+
+function rfBuildPattern(len,rails){
+  const pattern=[];let rail=0,dir=1;
+  for(let i=0;i<len;i++){pattern.push(rail);if(rail===0)dir=1;if(rail===rails-1)dir=-1;rail+=dir;}
+  return pattern;
+}
+
+function rfEncrypt(text,rails){
+  const rows=Array.from({length:rails},()=>[]);
+  const pat=rfBuildPattern(text.length,rails);
+  text.split('').forEach((c,i)=>rows[pat[i]].push(c));
+  return rows.map(r=>r.join('')).join('');
+}
+
+// 복호화: 암호문을 각 레일 길이만큼 나눠 담은 뒤 지그재그 순서로 읽어 평문 복원
+function rfDecrypt(cipher,rails){
+  const pat=rfBuildPattern(cipher.length,rails);
+  const counts=Array(rails).fill(0);
+  pat.forEach(p=>counts[p]++);
+  const railChars=[];let idx=0;
+  for(let r=0;r<rails;r++){railChars.push(cipher.slice(idx,idx+counts[r]).split(''));idx+=counts[r];}
+  const ptr=Array(rails).fill(0);
+  let out='';
+  for(let i=0;i<cipher.length;i++){const r=pat[i];out+=railChars[r][ptr[r]]||'';ptr[r]++;}
+  return out;
+}
+
+async function rfVisualize(){
+  let text=document.getElementById('rfInput').value.toUpperCase().replace(/[^A-Z]/g,'');
+  const rails=+document.getElementById('rfRails').value;
+  if(!text)text='WEAREDISCOVERED';
+  document.getElementById('rfInput').value=text;
+
+  const isEnc=rfMode==='enc';
+  // 격자에 올릴 평문 (dec는 암호문을 복호화한 평문을 지그재그에 배치)
+  const fenceText=isEnc?text:rfDecrypt(text,rails);
+  const result=isEnc?rfEncrypt(text,rails):fenceText;
+  const pat=rfBuildPattern(fenceText.length,rails);
+  const cols=fenceText.length;
+
+  // build grid
+  const grid=document.getElementById('rfGrid');
+  grid.style.gridTemplateColumns=`repeat(${cols},32px)`;
+  grid.innerHTML='';
+  for(let r=0;r<rails;r++){
+    for(let c=0;c<cols;c++){
+      const div=document.createElement('div');
+      div.className='rf-cell';
+      if(pat[c]===r){div.textContent=fenceText[c];div.classList.add('rail-'+r);}
+      else div.classList.add('empty');
+      grid.appendChild(div);
+    }
+  }
+
+  // legend
+  const leg=document.getElementById('rfLegend');
+  leg.innerHTML=Array.from({length:rails},(_,r)=>
+    `<div class="rf-leg-item"><div class="rf-leg-dot" style="background:${RAIL_COLORS[r]}"></div>레일 ${r+1}</div>`
+  ).join('');
+
+  // animate in
+  for(let c=0;c<cols;c++){
+    for(let r=0;r<rails;r++){
+      await delay(40);
+      grid.children[r*cols+c].classList.add('show');
+    }
+  }
+  await delay(200);
+
+  const railRead=document.getElementById('rfRailRead');
+  railRead.innerHTML='';
+  if(isEnc){
+    // 레일 순서로 읽어 암호문 만들기
+    for(let r=0;r<rails;r++){
+      const chars=[];
+      pat.forEach((p,i)=>{if(p===r)chars.push({c:fenceText[i],col:i});});
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+      const lbl=document.createElement('span');
+      lbl.style.cssText=`font-size:12px;font-weight:700;color:${RAIL_COLORS[r]};min-width:52px`;
+      lbl.textContent=`레일 ${r+1}`;
+      row.appendChild(lbl);
+      const charWrap=document.createElement('div');
+      charWrap.style.cssText='display:flex;gap:3px;flex-wrap:wrap';
+      chars.forEach(({c,col})=>{
+        const sp=document.createElement('span');
+        sp.style.cssText=`font-family:var(--mono);font-size:15px;font-weight:700;color:${RAIL_COLORS[r]};padding:2px 5px;background:var(--s2);border-radius:4px;border:1px solid ${RAIL_COLORS[r]}40`;
+        sp.textContent=c;sp.dataset.col=col;
+        charWrap.appendChild(sp);
+      });
+      row.appendChild(charWrap);
+      railRead.appendChild(row);
+      await delay(150);
+      charWrap.querySelectorAll('span').forEach((sp,i)=>{
+        setTimeout(()=>{
+          sp.style.boxShadow=`0 0 8px ${RAIL_COLORS[r]}`;
+          const gCell=grid.children[r*cols+(+sp.dataset.col)];
+          if(gCell)gCell.classList.add('read-hl');
+        },i*80);
+      });
+      await delay(chars.length*80+200);
+    }
+  } else {
+    // 지그재그(열 순서)로 읽어 평문 복원
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap';
+    const lbl=document.createElement('span');
+    lbl.style.cssText='font-size:12px;font-weight:700;color:var(--teal);min-width:96px';
+    lbl.textContent='지그재그로 읽기 →';
+    row.appendChild(lbl);
+    const charWrap=document.createElement('div');
+    charWrap.style.cssText='display:flex;gap:3px;flex-wrap:wrap';
+    row.appendChild(charWrap);railRead.appendChild(row);
+    for(let c=0;c<cols;c++){
+      const r=pat[c];
+      const gCell=grid.children[r*cols+c];
+      if(gCell)gCell.classList.add('read-hl');
+      const sp=document.createElement('span');
+      sp.style.cssText=`font-family:var(--mono);font-size:15px;font-weight:700;color:${RAIL_COLORS[r]};padding:2px 5px;background:var(--s2);border-radius:4px;border:1px solid ${RAIL_COLORS[r]}40`;
+      sp.textContent=fenceText[c];
+      charWrap.appendChild(sp);
+      await delay(140);
+    }
+  }
+
+  document.getElementById('rfResult').textContent=result;
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ======================== COLUMNAR ========================
+let colAnimating=false;
+let colMode='enc';
+
+function setColMode(m){
+  colMode=m;
+  document.getElementById('colMode1').classList.toggle('active',m==='enc');
+  document.getElementById('colMode2').classList.toggle('active',m==='dec');
+  document.getElementById('colInputLabel').textContent=m==='enc'?'평문':'암호문';
+  const inp=document.getElementById('colInput');
+  if(m==='dec'&&inp.value==='WEAREDISCOVERED')inp.value='EODASREIERCEWDV';
+  if(m==='enc'&&inp.value==='EODASREIERCEWDV')inp.value='WEAREDISCOVERED';
+}
+
+function colKeyChange(){
+  const k=document.getElementById('colKey').value.toUpperCase().replace(/[^A-Z]/g,'');
+  document.getElementById('colKey').value=k;
+}
+
+function getColOrder(key){
+  const k=[...key.toUpperCase()];
+  const sorted=[...k].sort();
+  return k.map(c=>sorted.indexOf(c));
+}
+
+// 복호화: 암호문을 키 정렬 순서대로 각 열에 채운 뒤 행 순서로 읽어 평문 복원
+function colDecrypt(cipher,key){
+  const cols=key.length;
+  const rows=Math.ceil(cipher.length/cols);
+  const pad=rows*cols-cipher.length;                 // 마지막 행 오른쪽의 빈 칸 수
+  const order=getColOrder(key);
+  const sortedCols=[...Array(cols).keys()].sort((a,b)=>order[a]-order[b]);
+  const colLen=c=>(c>=cols-pad?rows-1:rows);          // 오른쪽 pad개 열은 1칸 짧음
+  const grid=Array.from({length:rows},()=>Array(cols).fill(''));
+  let idx=0;
+  for(const c of sortedCols){const len=colLen(c);for(let r=0;r<len;r++)grid[r][c]=cipher[idx++]||'';}
+  let out='';
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)out+=grid[r][c];
+  return out;
+}
+
+async function colVisualize(){
+  if(colAnimating)return;colAnimating=true;
+  const isEnc=colMode==='enc';
+  let input=document.getElementById('colInput').value.toUpperCase().replace(/[^A-Z]/g,'');
+  let key=document.getElementById('colKey').value.toUpperCase().replace(/[^A-Z]/g,'')||'ZEBRA';
+  if(!input)input=isEnc?'WEAREDISCOVERED':'EODASREIERCEWDV';
+  document.getElementById('colInput').value=input;
+  document.getElementById('colKey').value=key;
+
+  const cols=key.length;
+  const rows=Math.ceil(input.length/cols);
+  const order=getColOrder(key);
+  const sortedCols=[...Array(cols).keys()].sort((a,b)=>order[a]-order[b]);
+
+  // 격자 내용 계산 (enc: 평문을 행 순서로 / dec: 암호문을 열 순서로)
+  let gridChars;
+  if(isEnc){
+    const padded=input.padEnd(rows*cols,'_');
+    gridChars=Array.from({length:rows},(_,r)=>Array.from({length:cols},(_,c)=>padded[r*cols+c]));
+  } else {
+    const pad=rows*cols-input.length;
+    const colLen=c=>(c>=cols-pad?rows-1:rows);
+    gridChars=Array.from({length:rows},()=>Array(cols).fill(''));
+    let idx=0;
+    for(const c of sortedCols){const len=colLen(c);for(let r=0;r<len;r++)gridChars[r][c]=input[idx++]||'';}
+  }
+
+  // 표 생성
+  const table=document.getElementById('colTable');table.innerHTML='';
+  const thead=document.createElement('tr');
+  for(let c=0;c<cols;c++){const th=document.createElement('th');th.id=`cth${c}`;th.textContent=key[c];th.style.color='var(--amber)';thead.appendChild(th);}
+  table.appendChild(thead);
+  for(let r=0;r<rows;r++){
+    const tr=document.createElement('tr');
+    for(let c=0;c<cols;c++){
+      const td=document.createElement('td');td.id=`ctd${r}_${c}`;
+      const ch=gridChars[r][c];
+      if(isEnc){
+        td.textContent=ch;td.className=ch==='_'?'pad':'fill';
+        td.style.opacity='0';td.style.transform='translateY(-6px)';
+      } else {
+        const empty=ch==='';
+        td.textContent=empty?'_':ch;td.className=empty?'pad':'fill';
+        td.style.opacity=empty?'1':'0';               // 채울 칸만 숨겼다가 나타남
+      }
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+
+  document.getElementById('colKeyOrder').innerHTML=
+    `키 정렬 순서: ${sortedCols.map(c=>`<span style="color:var(--teal);font-weight:700;font-family:var(--mono)">${key[c]}(${order[c]+1})</span>`).join(' → ')}`;
+
+  const readEl=document.getElementById('colReading');readEl.innerHTML='';
+  const readTitle=document.getElementById('colReadTitle');
+  let result='';
+
+  if(isEnc){
+    // 평문을 행 순서로 채워 넣기
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const td=document.getElementById(`ctd${r}_${c}`);await delay(30);td.style.transition='all .25s';td.style.opacity='1';td.style.transform='translateY(0)';}
+    if(readTitle)readTitle.textContent='열 순서대로 읽기 (키 정렬 순) → 암호문';
+    await delay(400);
+    for(const c of sortedCols){
+      const th=document.getElementById(`cth${c}`);th.classList.add('sorted');
+      for(let r=0;r<rows;r++){const td=document.getElementById(`ctd${r}_${c}`);if(td){td.style.background='rgba(13,115,119,.08)';td.style.color='var(--teal)';td.style.borderColor='rgba(13,115,119,.2)';}}
+      for(let r=0;r<rows;r++){
+        const ch=gridChars[r][c];
+        const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch==='_'?'•':ch;readEl.appendChild(sp);
+        await delay(80);sp.classList.add('lit');
+        if(ch!=='_')result+=ch;
+      }
+      await delay(200);
+    }
+  } else {
+    // 암호문을 키 정렬 순서대로 각 열에 채우기
+    if(readTitle)readTitle.textContent='행 순서대로 읽기 → 평문 복원';
+    for(const c of sortedCols){
+      const th=document.getElementById(`cth${c}`);th.classList.add('sorted');
+      for(let r=0;r<rows;r++){
+        const td=document.getElementById(`ctd${r}_${c}`);
+        if(td&&gridChars[r][c]!==''){
+          td.style.transition='all .25s';td.style.opacity='1';
+          td.style.background='rgba(13,115,119,.08)';td.style.color='var(--teal)';td.style.borderColor='rgba(13,115,119,.2)';
+          await delay(70);
+        }
+      }
+      await delay(150);
+    }
+    await delay(350);
+    // 행 순서로 읽어 평문 복원
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const ch=gridChars[r][c];
+        if(ch==='')continue;
+        const td=document.getElementById(`ctd${r}_${c}`);
+        if(td)td.style.boxShadow='0 0 10px rgba(13,115,119,.45)';
+        const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch;readEl.appendChild(sp);
+        await delay(85);sp.classList.add('lit');result+=ch;
+        if(td)setTimeout(()=>{td.style.boxShadow='';},300);
+      }
+    }
+  }
+
+  document.getElementById('colResult').textContent=result;
+  colAnimating=false;
+}
+
+// ======================== 브루트포스 해독 도전 ========================
+const BF_PHRASES=['ATTACK AT DAWN','MEET ME AT NOON','THE KEY IS UNDER THE MAT','TRUST NO ONE','RUN TO THE HILLS'];
+let bfPlain='',bfShift=0;
+function bfNew(){
+  bfPlain=BF_PHRASES[Math.floor(Math.random()*BF_PHRASES.length)];
+  bfShift=3+Math.floor(Math.random()*21);   // 3~23 (1·2는 너무 티 남)
+  document.getElementById('bfCipher').textContent=caesarEncode(bfPlain,bfShift,true);
+  document.getElementById('bfList').innerHTML='';
+  document.getElementById('bfOut').className='ci-out';
+}
+function bfRun(){
+  const cipher=document.getElementById('bfCipher').textContent;
+  const list=document.getElementById('bfList');
+  list.innerHTML='';
+  document.getElementById('bfOut').className='ci-out';
+  for(let s=1;s<=25;s++){
+    const cand=caesarEncode(cipher,s,false);
+    const row=document.createElement('button');
+    row.className='bf-row';
+    row.innerHTML=`<span class="bf-shift">shift ${s}</span><span class="bf-text">${cand}</span>`;
+    row.onclick=()=>bfPick(s,row);
+    list.appendChild(row);
+    setTimeout(()=>row.classList.add('show'),s*55);
+  }
+}
+function bfPick(s,row){
+  const out=document.getElementById('bfOut');
+  if(s===bfShift){
+    document.querySelectorAll('.bf-row').forEach(r=>r.classList.remove('hit'));
+    row.classList.add('hit');
+    out.className='ci-out show ok';
+    out.innerHTML=`💥 <b>뚫렸다!</b> 정답은 shift ${bfShift} — "${bfPlain}"<br>열쇠가 25개뿐이라 전부 시도하면 <b>반드시</b> 풀립니다. 이것이 시저 암호가 더 이상 안전하지 않은 이유예요. 현대 암호(AES-128)의 열쇠는 약 3.4×10³⁸개 — 전부 시도하는 건 사실상 불가능합니다.`;
+  }else{
+    out.className='ci-out show no';
+    out.innerHTML='🤔 음… 그 줄이 자연스러운 <b>영어 문장</b>으로 읽히나요? 말이 되는 줄을 다시 찾아보세요.';
+  }
+}
+
+// ======================== 해시 (SHA-256 라이브) ========================
+async function sha256hex(s){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+let hashSeq=0;
+async function hashLive(){
+  const seq=++hashSeq;
+  const a=document.getElementById('hashA').value, b=document.getElementById('hashB').value;
+  const [ha,hb]=await Promise.all([sha256hex(a),sha256hex(b)]);
+  if(seq!==hashSeq)return;   // 늦게 도착한 이전 계산 무시
+  document.getElementById('hashAOut').textContent=ha;
+  let diff=0;
+  document.getElementById('hashBOut').innerHTML=[...hb].map((c,i)=>{
+    const d=c!==ha[i]; if(d)diff++;
+    return d?`<span class="hd">${c}</span>`:c;
+  }).join('');
+  document.getElementById('hashDiffCnt').textContent=a===b?'완전히 동일!':`64자 중 ${diff}자가 다름`;
+}
+
+// ======================== 직접 열어보기 ========================
+function ciTry(section,key){
+  const out=document.getElementById('ci-'+section+'-out');
+  let ok,msg;
+  if(section==='sym'){
+    ok=key==='K';
+    msg=ok?'🔓 열렸어요! → "HELLO"<br>대칭 키는 잠글 때와 <b>똑같은 키</b>로만 열립니다.'
+          :'❌ 열리지 않아요.<br>대칭 키 암호는 잠근 키와 <b>동일한 키</b>가 있어야만 열 수 있어요.';
+  } else {
+    ok=key==='bob-priv';
+    if(ok) msg='🔓 열렸어요! → "HELLO"<br>공개 키로 잠근 메시지는 오직 <b>대응하는 개인 키</b>로만 열립니다.';
+    else if(key==='bob-pub') msg='❌ 안 열려요.<br>공개 키로는 <b>잠글 수만</b> 있고 열 수는 없어요. (그래서 공개해도 안전!)';
+    else msg='❌ 안 열려요.<br>Alice의 키로는 Bob에게 온 메시지를 열 수 없습니다.';
+  }
+  out.className='ci-out show '+(ok?'ok':'no');
+  out.innerHTML=msg;
+}
+
+// ======================== QUIZ ========================
+const QUIZZES={
+  caesar:[
+    {q:"shift가 3일 때 평문 'A'는 무엇으로 암호화될까요?",opts:['C','D','E'],a:1,ex:"A(0번째)에서 3칸 밀면 D(3번째). 그래서 A→D가 됩니다."},
+    {q:"시저 암호가 오늘날 안전하지 않은 가장 큰 이유는?",opts:['가능한 키가 25가지뿐이라 전부 시도할 수 있어서','글자가 사라져서','문장 길이가 바뀌어서'],a:0,ex:"shift는 1~25뿐이라 25번만 시도(브루트포스)하면 반드시 풀립니다."},
+    {q:"[도전] shift를 모르는 시저 암호문을 손에 넣었다. 가장 확실한 해독 전략은?",opts:['25가지 shift를 전부 시도해 말이 되는 문장을 찾는다','글자 순서를 이리저리 재배열해 본다','원래 키를 알 때까지 기다린다'],a:0,ex:"위의 '해독 도전'에서 해본 그대로! 키 공간이 작으면 브루트포스가 통합니다. 순서 재배열은 전치형 암호의 접근법이에요."},
+  ],
+  railfence:[
+    {q:"레일 펜스 암호는 글자를 어떻게 처리하나요?",opts:['다른 글자로 치환한다','글자는 그대로 두고 순서(위치)만 바꾼다','일부 글자를 지운다'],a:1,ex:"전치형(transposition)이라 글자 자체는 변하지 않고 배열 순서만 바뀝니다."},
+    {q:"'HELLO'를 레일 2개로 암호화하면? (지그재그 후 레일 순서로 읽기)",opts:['HLOEL','HELLO','OLLEH'],a:0,ex:"레일0=H,L,O / 레일1=E,L → 위 레일부터 읽어 HLOEL."},
+    {q:"[탐정] 어떤 암호문에 쓰인 알파벳의 종류와 개수가 평문과 완전히 똑같다면, 어떤 유형일 가능성이 높을까?",opts:['전치형 — 글자는 그대로, 위치만 바꿨으니까','치환형 — 글자를 다른 글자로 바꿨으니까','해시 — 지문으로 바꿨으니까'],a:0,ex:"전치형은 글자 자체를 안 바꾸므로 글자 구성이 보존됩니다. 실제 암호 분석가가 유형을 추리하는 단서예요!"},
+  ],
+  columnar:[
+    {q:"열 전치 암호에서 열을 읽는 순서는 무엇으로 정해지나요?",opts:['키워드 글자의 알파벳 순서','행 번호 순서','무작위'],a:0,ex:"키워드를 알파벳순으로 정렬한 순서대로 각 열을 읽어 암호문을 만듭니다."},
+    {q:"열 전치 암호는 어떤 유형의 암호인가요?",opts:['치환형','전치형','해시 함수'],a:1,ex:"글자는 그대로 두고 열 단위로 순서만 바꾸므로 전치형입니다."},
+    {q:"[계산] 키워드 'CAB'로 열 전치를 하면 열을 읽는 순서는? (알파벳순: A→B→C)",opts:['2번째 열 → 3번째 열 → 1번째 열','1번째 열 → 2번째 열 → 3번째 열','3번째 열 → 2번째 열 → 1번째 열'],a:0,ex:"C(3위)·A(1위)·B(2위)이므로 알파벳 순서가 빠른 A가 있는 2번째 열부터: 2→3→1. 위 시각화에 CAB를 넣어 확인해 보세요!"},
+  ],
+  symmetric:[
+    {q:"대칭 키 암호화의 가장 큰 약점은?",opts:['비밀 키를 안전하게 공유하기 어렵다','디지털 서명을 못 한다','속도가 느리다'],a:0,ex:"암복호화에 같은 키를 쓰므로 '그 키를 어떻게 안전하게 전달하느냐'가 핵심 난제입니다."},
+    {q:"다음 중 대칭 키 알고리즘은?",opts:['RSA','AES','Diffie-Hellman'],a:1,ex:"AES가 대표적인 대칭 키 알고리즘. RSA·Diffie-Hellman은 공개 키 방식입니다."},
+    {q:"[계산] 우리 반 30명이 서로 1:1 대칭 키 비밀 통신을 하려면 키가 몇 개 필요할까? (n(n-1)/2)",opts:['30개','435개','900개'],a:1,ex:"30×29÷2 = 435개! 인원이 늘수록 키가 폭발적으로 늘어나는 것 — 이것이 공개 키 암호가 등장한 배경 중 하나입니다."},
+  ],
+  pubkey:[
+    {q:"공개 키로 잠근(암호화한) 메시지는 무엇으로만 열 수 있나요?",opts:['같은 공개 키','대응하는 개인 키','아무 키나'],a:1,ex:"공개 키로 암호화 → 오직 짝이 되는 개인 키로만 복호화. 그래서 공개 키는 공개해도 안전합니다."},
+    {q:"디지털 서명은 무슨 키로 서명하나요?",opts:['자신의 개인 키','상대의 공개 키','세션 키'],a:0,ex:"개인 키로 서명하고 누구나 공개 키로 검증 → 신원 인증·부인 방지가 됩니다."},
+    {q:"[시나리오] 처음 방문한 쇼핑몰에 카드번호를 보내야 한다. 브라우저(HTTPS)는 실제로 어떻게 할까?",opts:['공개 키 방식으로 세션 키를 안전하게 합의한 뒤, 대칭 키(AES)로 데이터를 빠르게 암호화해 전송','카드번호를 서버의 개인 키로 암호화해 전송','처음 보는 사이트니까 평문으로 보내고 나중에 암호화'],a:0,ex:"하이브리드 방식! 공개 키로 '키 배포 문제'를 풀고, 대칭 키로 '속도'를 챙깁니다. 위 HTTPS 3단계 그대로예요."},
+  ],
+  hash:[
+    {q:"해시 함수가 암호화와 결정적으로 다른 점은?",opts:['출력에서 원래 입력을 되돌릴 수 없다 (단방향)','키가 두 개 필요하다','출력이 입력보다 항상 길다'],a:0,ex:"해시는 복호화라는 개념 자체가 없는 단방향 함수입니다. 그래서 '암호화'가 아니라 '해시를 만든다'고 말해요."},
+    {q:"사이트가 회원 비밀번호를 저장하는 올바른 방법은?",opts:['비밀번호 원문을 그대로 저장','비밀번호의 해시값만 저장','관리자 이메일로 보관'],a:1,ex:"해시만 저장하면 DB가 유출돼도 원문을 알 수 없고, 로그인 때는 입력값의 해시를 대조하면 됩니다. 원문 저장은 최악의 보안 사고!"},
+  ],
+};
+function renderQuizzes(){
+  document.querySelectorAll('.quiz-mount').forEach(mount=>{
+    const set=QUIZZES[mount.dataset.quiz];
+    if(!set) return;
+    const items=set.map((item,qi)=>{
+      const opts=item.opts.map((o,oi)=>
+        `<button class="quiz-opt" onclick="cipherQuiz(this,${oi},${item.a})">${o}</button>`).join('');
+      return `<div class="quiz-item" data-explain="${item.ex.replace(/"/g,'&quot;')}">
+        <div class="quiz-q"><span class="quiz-q-num">${qi+1}</span>${item.q}</div>
+        <div class="quiz-opts">${opts}</div>
+        <div class="quiz-fb"></div>
+      </div>`;
+    }).join('');
+    mount.innerHTML=`<div class="quiz"><div class="quiz-hd">✅ 확인 문제</div>${items}</div>`;
+  });
+}
+function cipherQuiz(btn,picked,answer){
+  const item=btn.closest('.quiz-item');
+  if(item.querySelector('.quiz-opt.correct')) return;   // 이미 푼 문제
+  const opts=item.querySelectorAll('.quiz-opt');
+  opts.forEach((o,i)=>{
+    o.disabled=true;
+    if(i===answer) o.classList.add('correct');
+  });
+  const ok=picked===answer;
+  if(!ok) btn.classList.add('wrong');
+  const fb=item.querySelector('.quiz-fb');
+  fb.className='quiz-fb show '+(ok?'ok':'no');
+  fb.innerHTML=(ok?'⭕ 정답이에요! ':'❌ 아쉬워요. ')+item.dataset.explain;
+}
+
+// ======================== INIT ========================
+buildWheel();
+caesarShiftChange(3);
+updateMapTable(3);
+renderQuizzes();
+bfNew();
+if(window.crypto&&crypto.subtle){hashLive();}
+else{document.getElementById('hashAOut').textContent='이 브라우저에서는 실시간 해시 계산을 지원하지 않아요.';}
+</script>
+</body>
+</html>
