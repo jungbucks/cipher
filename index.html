@@ -767,17 +767,21 @@ function caesarShiftChange(v){
   caesarLive();
 }
 
+let mcCells=[];   // 암호문 칸 참조 캐시 — 최초 1회만 생성, 이후 textContent만 갱신
 function updateMapTable(shift){
-  const plain=document.getElementById('mapPlain');
-  const cipher=document.getElementById('mapCipher');
-  plain.innerHTML=''; cipher.innerHTML='';
-  for(let i=0;i<26;i++){
-    const td1=document.createElement('td');td1.className='map-plain';td1.textContent=ALPHA[i];td1.id='mp'+i;
-    const td2=document.createElement('td');td2.className='map-cipher';
-    const enc=(i+shift)%26;
-    const dec=(i-shift+26)%26;
-    td2.textContent=caesarMode==='enc'?ALPHA[enc]:ALPHA[dec];td2.id='mc'+i;
-    plain.appendChild(td1); cipher.appendChild(td2);
+  if(!mcCells.length){                       // 구조는 한 번만 만든다(평문 칸은 절대 안 바뀜)
+    let ph='';
+    for(let i=0;i<26;i++)ph+=`<td class="map-plain" id="mp${i}">${ALPHA[i]}</td>`;
+    document.getElementById('mapPlain').innerHTML=ph;
+    const cipher=document.getElementById('mapCipher'); cipher.innerHTML='';
+    for(let i=0;i<26;i++){
+      const td=document.createElement('td');td.className='map-cipher';td.id='mc'+i;
+      cipher.appendChild(td);mcCells.push(td);
+    }
+  }
+  for(let i=0;i<26;i++){                      // 매번: 시프트·모드에 따라 암호문 글자만 갱신
+    const enc=(i+shift)%26,dec=(i-shift+26)%26;
+    mcCells[i].textContent=caesarMode==='enc'?ALPHA[enc]:ALPHA[dec];
   }
 }
 
