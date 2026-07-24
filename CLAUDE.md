@@ -20,6 +20,15 @@
 - 회귀 기준(2026-07-15, 16종 PASS): 브루트포스(25행·정답/오답·리셋), 해시(64자·diff·동일입력), 퀴즈 51버튼, 휠 52자·매핑 26칸, `rfEncrypt('HELLO',2)==='HLOEL'`, `colDecrypt('EODASREIERCEWDV','ZEBRA')==='WEAREDISCOVERED'`, latinNote.
 - 로직 검산 완료(2026-07-15): 레일펜스·열 전치 암/복호 왕복, 불규칙 열 전치의 짧은 열 처리 정확.
 
+## 열 전치 — 기초/심화 (2026-07-24)
+
+- **서브탭 2개**(`.sub-tab`, `colLevel`): 🌱**기초**(교과서식) = 키워드 없이 **열 수(3~6 슬라이더)만** 지정 → 왼쪽 열부터 항등순서로 세로 읽기 / 🔑**심화** = 기존 ZEBRA 키워드(알파벳 정렬순 열 읽기).
+- **엔진 공유**: `colVisualize`는 `cols·order·sortedCols·headers`를 레벨별로만 분기(기초=항등순열·숫자헤더 / 심화=getColOrder·글자헤더) — 검증된 애니메이션 그대로 재사용. 기초 암호화 헬퍼 `basicEncrypt(text,cols)`.
+- **1×/2× 속도**(`colSpeed`): `colVisualize` 안 `const D=ms=>delay(ms/colSpeed)`로 전 딜레이 배속.
+- ⚠️ **기초판은 표준형**(열수만·자연순서)으로 구현 — 실제 교과서 표기와 다를 수 있어 화면에 "다르면 알려달라" 안내 박아둠. 교과서 원본 확인 시 조정 대상.
+- **검증(2026-07-24, 프로브 전건 PASS)**: 기초 enc/dec 왕복 cols=5(`WDVEIEASRRCEEOD`)·cols=3(`WRIOREESVEADCED`), 심화 ZEBRA 왕복(`EODASREIERCEWDV`), 헤더 기초=숫자·심화=글자, 2×속도 무오류. 스크린샷 확인.
+- ⚠️ **프로브 함정 2종**: ① `showPage`는 인라인 `event.target` 의존 → 프로그램 호출 시 에러(실제 클릭은 정상). 프로브는 `.page.active` 클래스 직접 토글로 우회. ② `let colAnimating` 등 최상위 let은 `window` 속성 아님 → `W.colAnimating` undefined. 애니메이션 완료 대기는 **`await W.colVisualize()`**(함수 선언이라 window에 있음)로.
+
 ## 이력·백로그
 
 - 2026-07-06 초판(5탭). 2026-07-15 교사 리뷰 9건 반영: 휠 문구·공동인증서·영문 안내(1~3), 브루트포스 도전(4), 해시 탭 신설(5), 시나리오 퀴즈 10→17문항(6), 폰트 폴백 보강·배포 준비(7~9).

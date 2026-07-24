@@ -82,6 +82,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .chip.active{background:var(--amber-bg);border-color:var(--amber-mid);color:var(--amber);font-weight:700}
 .chip.active.purple{background:var(--plum-bg);border-color:var(--plum);color:var(--plum)}
 
+/* 서브탭 (기초/심화) + 속도 버튼 */
+.sub-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sub-tab{padding:9px 16px;border:1.5px solid var(--border);border-radius:10px;background:var(--s1);font-size:13px;font-weight:700;color:var(--dim);cursor:pointer;font-family:inherit;transition:all .15s}
+.sub-tab:hover{border-color:var(--teal)}
+.sub-tab.active{background:var(--teal-bg);border-color:rgba(13,115,119,.35);color:var(--teal)}
+.spd-row{display:inline-flex;gap:4px;align-items:center}
+.spd-btn{padding:7px 11px;border:1.5px solid var(--border);border-radius:8px;background:var(--s1);font-size:12px;font-weight:800;color:var(--dim);cursor:pointer;font-family:var(--mono);transition:all .15s}
+.spd-btn:hover{border-color:var(--teal)}
+.spd-btn.active{background:var(--teal-bg);border-color:rgba(13,115,119,.35);color:var(--teal)}
+
 /* btn */
 .btn{padding:10px 26px;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
 .btn-cyan{background:var(--amber-mid);color:#fff}
@@ -418,17 +428,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(13,115,119,.1);color:var(--teal)">전치형 암호</div>
     <div class="cipher-name">열 전치 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Columnar Transposition)</span></div>
-    <div class="cipher-desc">평문을 격자(표)에 채운 뒤, 키워드의 알파벳 순서대로 열을 읽어 암호문을 만드는 전치형 암호입니다.</div>
+    <div class="cipher-desc" id="colDesc">평문을 격자(표)에 채운 뒤, <b>왼쪽 열부터 차례로</b> 세로로 읽어 순서를 뒤섞는 가장 기본적인 전치 암호입니다.</div>
+  </div>
+
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="colLvl1" onclick="setColLevel('basic')">🌱 기초 — 열 수만 정하기</button>
+    <button class="sub-tab" id="colLvl2" onclick="setColLevel('adv')">🔑 심화 — 키워드로 열 순서 섞기</button>
   </div>
 
   <div class="card">
-    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
       <div style="flex:2;min-width:160px">
         <div class="label-row"><span class="lbl" id="colInputLabel">평문</span></div>
         <input id="colInput" class="inp" placeholder="WEAREDISCOVERED" value="WEAREDISCOVERED" oninput="latinNote('colInput','colNote')">
         <div class="inp-note" id="colNote">⚠️ 영문 알파벳만 지원돼요 — 그 외 글자(공백 포함)는 자동으로 빠집니다</div>
       </div>
-      <div style="flex:1;min-width:100px">
+      <div id="colColsWrap" style="flex:1;min-width:150px">
+        <div class="label-row"><span class="lbl">열 수</span><span class="lbl-val" id="colColsVal">5</span></div>
+        <input id="colColsSlider" type="range" min="3" max="6" value="5" class="slider" oninput="colColsChange(this.value)">
+      </div>
+      <div id="colKeyWrap" style="flex:1;min-width:100px;display:none">
         <div class="label-row"><span class="lbl">키워드</span></div>
         <input id="colKey" class="inp" placeholder="ZEBRA" value="ZEBRA" oninput="colKeyChange()">
       </div>
@@ -437,7 +456,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="chip" id="colMode2" onclick="setColMode('dec')">복호화</button>
       </div>
       <button class="btn btn-cyan" onclick="colVisualize()">▶ 시각화</button>
+      <span class="spd-row"><button class="spd-btn active" id="colSpd1" onclick="setColSpeed(1)">1×</button><button class="spd-btn" id="colSpd2" onclick="setColSpeed(2)">2×</button></span>
     </div>
+    <div id="colBasicNote" style="font-size:12px;color:var(--dim2);line-height:1.6;margin-bottom:4px">📖 교과서식 기초판: 평문을 <b>열 수</b>만큼의 표에 채우고 <b>왼쪽 열부터 차례로</b> 세로로 읽습니다(키워드 없음). <span style="color:var(--teal)">※ 표준형으로 구현했어요 — 쓰시는 교과서와 다르면 알려주세요.</span></div>
 
     <div class="card-title">격자 배열</div>
     <div class="col-grid"><table class="col-table" id="colTable"></table></div>
@@ -1016,6 +1037,46 @@ function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 // ======================== COLUMNAR ========================
 let colAnimating=false;
 let colMode='enc';
+let colLevel='basic';   // 'basic'(교과서식 열수) | 'adv'(키워드)
+let colSpeed=1;
+
+// 기초판 암호화: 평문을 cols열 표에 행 순서로 채우고 왼쪽 열부터 세로로 읽기
+function basicEncrypt(input,cols){
+  const rows=Math.ceil(input.length/cols);
+  const padded=input.padEnd(rows*cols,'_');
+  let out='';
+  for(let c=0;c<cols;c++)for(let r=0;r<rows;r++){const ch=padded[r*cols+c];if(ch!=='_')out+=ch;}
+  return out;
+}
+
+function setColLevel(l){
+  if(colAnimating)return;
+  colLevel=l;
+  document.getElementById('colLvl1').classList.toggle('active',l==='basic');
+  document.getElementById('colLvl2').classList.toggle('active',l==='adv');
+  document.getElementById('colColsWrap').style.display=l==='basic'?'':'none';
+  document.getElementById('colKeyWrap').style.display=l==='adv'?'':'none';
+  document.getElementById('colBasicNote').style.display=l==='basic'?'':'none';
+  document.getElementById('colDesc').innerHTML=l==='basic'
+    ? '평문을 격자(표)에 채운 뒤, <b>왼쪽 열부터 차례로</b> 세로로 읽어 순서를 뒤섞는 가장 기본적인 전치 암호입니다.'
+    : '평문을 격자에 채운 뒤, <b>키워드의 알파벳 순서</b>대로 열을 읽어 순서를 한 번 더 섞는 전치 암호입니다.';
+  setColMode('enc');
+  document.getElementById('colTable').innerHTML='';
+  document.getElementById('colReading').innerHTML='';
+  document.getElementById('colResult').textContent='';
+  document.getElementById('colKeyOrder').innerHTML='';
+}
+
+function colColsChange(v){
+  document.getElementById('colColsVal').textContent=v;
+  if(colLevel==='basic'&&colMode==='dec')setColMode('dec');   // 샘플 암호문 재계산
+}
+
+function setColSpeed(s){
+  colSpeed=s;
+  document.getElementById('colSpd1').classList.toggle('active',s===1);
+  document.getElementById('colSpd2').classList.toggle('active',s===2);
+}
 
 function setColMode(m){
   colMode=m;
@@ -1023,8 +1084,13 @@ function setColMode(m){
   document.getElementById('colMode2').classList.toggle('active',m==='dec');
   document.getElementById('colInputLabel').textContent=m==='enc'?'평문':'암호문';
   const inp=document.getElementById('colInput');
-  if(m==='dec'&&inp.value==='WEAREDISCOVERED')inp.value='EODASREIERCEWDV';
-  if(m==='enc'&&inp.value==='EODASREIERCEWDV')inp.value='WEAREDISCOVERED';
+  if(colLevel==='adv'){
+    if(m==='dec'&&inp.value==='WEAREDISCOVERED')inp.value='EODASREIERCEWDV';
+    if(m==='enc'&&inp.value==='EODASREIERCEWDV')inp.value='WEAREDISCOVERED';
+  } else {
+    const cols=+document.getElementById('colColsSlider').value||5;
+    inp.value=(m==='dec')?basicEncrypt('WEAREDISCOVERED',cols):'WEAREDISCOVERED';
+  }
 }
 
 function colKeyChange(){
@@ -1056,17 +1122,29 @@ function colDecrypt(cipher,key){
 
 async function colVisualize(){
   if(colAnimating)return;colAnimating=true;
+  const D=ms=>delay(ms/colSpeed);                    // 속도 배속(1×/2×)
   const isEnc=colMode==='enc';
   let input=document.getElementById('colInput').value.toUpperCase().replace(/[^A-Z]/g,'');
-  let key=document.getElementById('colKey').value.toUpperCase().replace(/[^A-Z]/g,'')||'ZEBRA';
-  if(!input)input=isEnc?'WEAREDISCOVERED':'EODASREIERCEWDV';
-  document.getElementById('colInput').value=input;
-  document.getElementById('colKey').value=key;
 
-  const cols=key.length;
+  // 레벨별 파생값 — 기초: 열 수만·항등순열·숫자헤더 / 심화: 키워드 정렬순·글자헤더
+  let cols,order,sortedCols,headers,headColor;
+  if(colLevel==='adv'){
+    let key=document.getElementById('colKey').value.toUpperCase().replace(/[^A-Z]/g,'')||'ZEBRA';
+    document.getElementById('colKey').value=key;
+    if(!input)input=isEnc?'WEAREDISCOVERED':'EODASREIERCEWDV';
+    cols=key.length;
+    order=getColOrder(key);
+    sortedCols=[...Array(cols).keys()].sort((a,b)=>order[a]-order[b]);
+    headers=[...key];headColor='var(--amber)';
+  } else {
+    cols=+document.getElementById('colColsSlider').value||5;
+    if(!input)input=isEnc?'WEAREDISCOVERED':basicEncrypt('WEAREDISCOVERED',cols);
+    order=[...Array(cols).keys()];
+    sortedCols=[...Array(cols).keys()];              // 왼쪽부터 자연 순서
+    headers=[...Array(cols).keys()].map(c=>String(c+1));headColor='var(--teal)';
+  }
+  document.getElementById('colInput').value=input;
   const rows=Math.ceil(input.length/cols);
-  const order=getColOrder(key);
-  const sortedCols=[...Array(cols).keys()].sort((a,b)=>order[a]-order[b]);
 
   // 격자 내용 계산 (enc: 평문을 행 순서로 / dec: 암호문을 열 순서로)
   let gridChars;
@@ -1084,7 +1162,7 @@ async function colVisualize(){
   // 표 생성
   const table=document.getElementById('colTable');table.innerHTML='';
   const thead=document.createElement('tr');
-  for(let c=0;c<cols;c++){const th=document.createElement('th');th.id=`cth${c}`;th.textContent=key[c];th.style.color='var(--amber)';thead.appendChild(th);}
+  for(let c=0;c<cols;c++){const th=document.createElement('th');th.id=`cth${c}`;th.textContent=headers[c];th.style.color=headColor;thead.appendChild(th);}
   table.appendChild(thead);
   for(let r=0;r<rows;r++){
     const tr=document.createElement('tr');
@@ -1104,8 +1182,9 @@ async function colVisualize(){
     table.appendChild(tr);
   }
 
-  document.getElementById('colKeyOrder').innerHTML=
-    `키 정렬 순서: ${sortedCols.map(c=>`<span style="color:var(--teal);font-weight:700;font-family:var(--mono)">${key[c]}(${order[c]+1})</span>`).join(' → ')}`;
+  document.getElementById('colKeyOrder').innerHTML= colLevel==='adv'
+    ? `키 정렬 순서: ${sortedCols.map(c=>`<span style="color:var(--teal);font-weight:700;font-family:var(--mono)">${headers[c]}(${order[c]+1})</span>`).join(' → ')}`
+    : `읽는 순서: 왼쪽 열부터 <span style="color:var(--teal);font-weight:700;font-family:var(--mono)">1 → ${cols}</span> 차례로 세로로 읽기`;
 
   const readEl=document.getElementById('colReading');readEl.innerHTML='';
   const readTitle=document.getElementById('colReadTitle');
@@ -1113,22 +1192,22 @@ async function colVisualize(){
 
   if(isEnc){
     // 평문을 행 순서로 채워 넣기
-    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const td=document.getElementById(`ctd${r}_${c}`);await delay(30);td.style.transition='all .25s';td.style.opacity='1';td.style.transform='translateY(0)';}
-    if(readTitle)readTitle.textContent='열 순서대로 읽기 (키 정렬 순) → 암호문';
-    await delay(400);
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const td=document.getElementById(`ctd${r}_${c}`);await D(30);td.style.transition='all .25s';td.style.opacity='1';td.style.transform='translateY(0)';}
+    if(readTitle)readTitle.textContent=colLevel==='adv'?'열 순서대로 읽기 (키 정렬 순) → 암호문':'왼쪽 열부터 차례로 읽기 → 암호문';
+    await D(400);
     for(const c of sortedCols){
       const th=document.getElementById(`cth${c}`);th.classList.add('sorted');
       for(let r=0;r<rows;r++){const td=document.getElementById(`ctd${r}_${c}`);if(td){td.style.background='rgba(13,115,119,.08)';td.style.color='var(--teal)';td.style.borderColor='rgba(13,115,119,.2)';}}
       for(let r=0;r<rows;r++){
         const ch=gridChars[r][c];
         const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch==='_'?'•':ch;readEl.appendChild(sp);
-        await delay(80);sp.classList.add('lit');
+        await D(80);sp.classList.add('lit');
         if(ch!=='_')result+=ch;
       }
-      await delay(200);
+      await D(200);
     }
   } else {
-    // 암호문을 키 정렬 순서대로 각 열에 채우기
+    // 암호문을 열 순서대로 각 열에 채우기
     if(readTitle)readTitle.textContent='행 순서대로 읽기 → 평문 복원';
     for(const c of sortedCols){
       const th=document.getElementById(`cth${c}`);th.classList.add('sorted');
@@ -1137,12 +1216,12 @@ async function colVisualize(){
         if(td&&gridChars[r][c]!==''){
           td.style.transition='all .25s';td.style.opacity='1';
           td.style.background='rgba(13,115,119,.08)';td.style.color='var(--teal)';td.style.borderColor='rgba(13,115,119,.2)';
-          await delay(70);
+          await D(70);
         }
       }
-      await delay(150);
+      await D(150);
     }
-    await delay(350);
+    await D(350);
     // 행 순서로 읽어 평문 복원
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
@@ -1151,7 +1230,7 @@ async function colVisualize(){
         const td=document.getElementById(`ctd${r}_${c}`);
         if(td)td.style.boxShadow='0 0 10px rgba(13,115,119,.45)';
         const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch;readEl.appendChild(sp);
-        await delay(85);sp.classList.add('lit');result+=ch;
+        await D(85);sp.classList.add('lit');result+=ch;
         if(td)setTimeout(()=>{td.style.boxShadow='';},300);
       }
     }
