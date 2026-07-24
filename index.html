@@ -17,7 +17,8 @@
 :root{
   --bg:#FBF9F6;--s1:#FFFFFF;--s2:#F5F1EB;--s3:#EDE6DA;
   --border:#E2D9CC;--text:#1C1917;--dim:#57534E;--dim2:#78716C;
-  --mono:'Courier New',Courier,monospace;
+  --mono:ui-monospace,'SF Mono','Cascadia Code','Consolas','JetBrains Mono','D2Coding',monospace;
+  /* 타입 스케일(px) — 이 안에서만 고른다: 라벨11 · 캡션12 · 컨트롤13~14 · 본문/데이터15 · 강조데이터16 · h2 26 · 디스플레이 clamp. 아이콘/이모지 크기는 예외. */
   --amber:#C2770A;--amber-bg:#FEF3C7;--amber-mid:#D97706;
   --plum:#6D28D9;--plum-bg:#EDE9FE;
   --teal:#0D7377;--teal-bg:#CCFBF1;
@@ -52,7 +53,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .cipher-hd{margin-bottom:28px}
 .cipher-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:12px}
 .cipher-name{font-size:26px;font-weight:800;letter-spacing:-.015em;margin-bottom:10px;color:var(--text)}
-.cipher-desc{font-size:14px;color:var(--dim);line-height:1.75;max-width:640px}
+.cipher-desc{font-size:15px;color:var(--dim);line-height:1.7;max-width:640px}
 
 /* card */
 .card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.03)}
@@ -104,7 +105,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .outer-letter.hl{fill:#92400E;font-size:15px}
 .inner-letter.hl{fill:#C2410C;font-size:15px}
 #innerRing{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
-.wheel-label{font-size:10px;font-weight:700;letter-spacing:.1em;fill:#78716C;font-family:inherit}
+.wheel-label{font-size:11px;font-weight:700;letter-spacing:.1em;fill:#78716C;font-family:inherit}
 
 /* map table */
 .map-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:15px;margin-top:4px}
@@ -142,7 +143,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ====== COLUMNAR ====== */
 .col-grid{overflow-x:auto;margin:8px 0}
-.col-table{border-collapse:collapse;font-family:var(--mono);font-size:14px}
+.col-table{border-collapse:collapse;font-family:var(--mono);font-size:15px}
 .col-table td,.col-table th{width:36px;height:36px;text-align:center;border:1px solid var(--s3);transition:all .35s}
 .col-table th{font-size:11px;font-weight:800;letter-spacing:.06em;background:var(--s2);border-color:var(--border);color:var(--dim)}
 .col-table th.sorted{color:var(--teal);background:rgba(13,115,119,.08);border-color:rgba(13,115,119,.3)}
@@ -165,7 +166,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .flow-wrap{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap;margin:14px 0 8px;padding:0 4px}
 .flow-node{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
 .flow-icon{width:52px;height:52px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.flow-lbl{font-size:10px;font-weight:700;color:var(--dim);text-align:center;letter-spacing:.02em;max-width:60px}
+.flow-lbl{font-size:11px;font-weight:700;color:var(--dim);text-align:center;letter-spacing:.02em;max-width:60px}
 .flow-key{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 12px;border-radius:10px;border:1.5px dashed;font-size:11px;font-weight:700;min-width:72px;text-align:center;flex-shrink:0}
 .flow-arrow{font-size:18px;color:var(--dim2);margin:0 3px;padding-top:16px;flex-shrink:0}
 .flow-msg-box{padding:7px 12px;border-radius:8px;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.05em;text-align:center;border:1.5px solid}
@@ -184,7 +185,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .badge-asym{display:inline-block;padding:2px 9px;border-radius:4px;font-size:11px;font-weight:700;background:var(--plum-bg);color:var(--plum);border:1px solid rgba(109,40,217,.25)}
 .https-flow{display:flex;align-items:stretch;gap:1px;background:var(--s3);border-radius:12px;overflow:hidden;margin:12px 0}
 .https-step{flex:1;padding:16px 12px;background:var(--s1);display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
-.https-step-num{font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--dim2)}
+.https-step-num{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dim2)}
 .https-step-icon{font-size:20px}
 .https-step-title{font-size:12px;font-weight:700;color:var(--text)}
 .https-step-desc{font-size:11px;color:var(--dim);line-height:1.4}
@@ -212,12 +213,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .quiz-q{font-size:15px;font-weight:700;color:var(--text);margin-bottom:11px;line-height:1.6}
 .quiz-q-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:var(--amber-bg);color:var(--amber);font-size:12px;font-weight:800;margin-right:7px}
 .quiz-opts{display:flex;flex-direction:column;gap:8px}
-.quiz-opt{text-align:left;padding:11px 14px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;font-size:14px;color:var(--text);cursor:pointer;font-family:inherit;font-weight:600;transition:border-color .15s,background .15s}
+.quiz-opt{text-align:left;padding:11px 14px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;font-size:15px;color:var(--text);cursor:pointer;font-family:inherit;font-weight:600;transition:border-color .15s,background .15s}
 .quiz-opt:hover:not(:disabled){border-color:var(--amber-mid)}
 .quiz-opt:disabled{cursor:default}
 .quiz-opt.correct{background:var(--green-bg);border-color:var(--green);color:var(--green)}
 .quiz-opt.wrong{background:rgba(190,24,93,.08);border-color:var(--rose);color:var(--rose)}
-.quiz-fb{margin-top:11px;font-size:13.5px;line-height:1.65;padding:11px 14px;border-radius:9px;display:none}
+.quiz-fb{margin-top:11px;font-size:13px;line-height:1.65;padding:11px 14px;border-radius:9px;display:none}
 .quiz-fb.show{display:block}
 .quiz-fb.ok{background:var(--green-bg);color:#166534;border:1px solid rgba(21,128,61,.2)}
 .quiz-fb.no{background:rgba(190,24,93,.06);color:#9F1239;border:1px solid rgba(190,24,93,.2)}
@@ -228,7 +229,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .ci-keys{display:flex;gap:8px;flex-wrap:wrap}
 .ci-key-btn{padding:9px 15px;border-radius:9px;border:1.5px solid var(--border);background:var(--s1);font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;transition:border-color .15s,background .15s}
 .ci-key-btn:hover{border-color:var(--amber-mid);background:var(--s2)}
-.ci-out{font-size:14px;font-weight:600;padding:11px 15px;border-radius:9px;display:none;line-height:1.65}
+.ci-out{font-size:15px;font-weight:600;padding:11px 15px;border-radius:9px;display:none;line-height:1.65}
 .ci-out.show{display:block}
 .ci-out.ok{background:var(--green-bg);color:#166534;border:1px solid rgba(21,128,61,.2)}
 .ci-out.no{background:rgba(190,24,93,.06);color:#9F1239;border:1px solid rgba(190,24,93,.2);animation:ciShake .35s}
@@ -244,12 +245,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .bf-row.show{opacity:1;transform:none}
 .bf-row:hover{border-color:var(--amber-mid)}
 .bf-shift{font-size:11px;font-weight:800;color:var(--dim2);min-width:60px;font-family:var(--mono)}
-.bf-text{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--text);letter-spacing:.04em}
+.bf-text{font-family:var(--mono);font-size:15px;font-weight:600;color:var(--text);letter-spacing:.04em}
 .bf-row.hit{background:var(--green-bg);border-color:var(--green)}
 .bf-row.hit .bf-text,.bf-row.hit .bf-shift{color:var(--green)}
 
 /* ====== 해시 함수 ====== */
-.hash-out{font-family:var(--mono);font-size:12.5px;word-break:break-all;line-height:1.7;padding:10px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;letter-spacing:.03em;color:var(--dim)}
+.hash-out{font-family:var(--mono);font-size:12px;word-break:break-all;line-height:1.7;padding:10px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;letter-spacing:.03em;color:var(--dim)}
 .hash-out .hd{color:var(--rose);font-weight:800;background:var(--rose-bg);border-radius:2px}
 </style>
 </head>
@@ -292,8 +293,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
               <circle cx="150" cy="150" r="105" fill="rgba(109,40,217,.04)" stroke="rgba(109,40,217,.15)" stroke-width="1.5"/>
               <g id="innerLetters"></g>
             </g>
-            <text x="150" y="155" text-anchor="middle" class="wheel-label" style="font-size:10px;fill:var(--dim)">평문</text>
-            <text x="150" y="167" text-anchor="middle" class="wheel-label" style="font-size:9px;fill:var(--plum)">암호문</text>
+            <text x="150" y="155" text-anchor="middle" class="wheel-label" style="font-size:11px;fill:var(--dim)">평문</text>
+            <text x="150" y="168" text-anchor="middle" class="wheel-label" style="font-size:11px;fill:var(--plum)">암호문</text>
             <circle cx="150" cy="4" r="4" fill="var(--amber-mid)" opacity=".9"/>
           </svg>
         </div>
@@ -325,7 +326,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div id="caesarOutput" class="output-area" style="min-height:80px"></div>
       <div class="result-row" style="margin-top:8px">
         <span class="result-label">전체</span>
-        <span id="caesarFull" class="result-text" style="font-size:14px"></span>
+        <span id="caesarFull" class="result-text" style="font-size:15px"></span>
         <button class="copy-mini" onclick="copyText('caesarFull')">복사</button>
       </div>
     </div>
@@ -342,7 +343,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
     <div class="card" style="grid-column:1/-1">
       <div class="card-title">🕵️ 해독 도전 — 열쇠 없이 부수기 (브루트포스)</div>
-      <p style="font-size:13.5px;color:var(--dim);line-height:1.7;margin-bottom:10px">
+      <p style="font-size:15px;color:var(--dim);line-height:1.7;margin-bottom:10px">
         적의 암호문을 가로챘습니다: <span class="ci-locked" style="margin:0 2px">🔒 <span id="bfCipher"></span></span><br>
         shift가 몇인지는 모릅니다. 하지만 열쇠는 <b>25개뿐</b> — 전부 시도한 뒤, <b>말이 되는 영어 문장을 찾아 클릭</b>하세요!
       </p>
@@ -454,7 +455,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="card">
     <div class="card-title">작동 원리</div>
     <div class="concept-intro">
-      <div style="font-size:14px;color:var(--dim);line-height:1.7">송신자와 수신자가 <strong style="color:var(--amber)">동일한 비밀 키</strong>를 공유합니다. 송신자는 이 키로 평문을 암호화하고, 수신자는 같은 키로 복호화합니다.</div>
+      <div style="font-size:15px;color:var(--dim);line-height:1.7">송신자와 수신자가 <strong style="color:var(--amber)">동일한 비밀 키</strong>를 공유합니다. 송신자는 이 키로 평문을 암호화하고, 수신자는 같은 키로 복호화합니다.</div>
     </div>
     <div class="flow-wrap">
       <div class="flow-node"><div class="flow-icon" style="background:var(--amber-bg)">👩</div><div class="flow-lbl">송신자 (Alice)</div></div>
@@ -531,7 +532,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="card">
     <div class="card-title">1. 암호화 — 공개 키로 잠그고, 개인 키로 열기</div>
     <div class="concept-intro pubkey">
-      <div style="font-size:14px;color:var(--dim);line-height:1.7">Bob은 <strong style="color:var(--plum)">공개 키</strong>를 전 세계에 공개합니다. 누구나 공개 키로 메시지를 잠글 수 있지만, 오직 Bob의 <strong style="color:var(--rose)">개인 키</strong>만 열 수 있습니다.</div>
+      <div style="font-size:15px;color:var(--dim);line-height:1.7">Bob은 <strong style="color:var(--plum)">공개 키</strong>를 전 세계에 공개합니다. 누구나 공개 키로 메시지를 잠글 수 있지만, 오직 Bob의 <strong style="color:var(--rose)">개인 키</strong>만 열 수 있습니다.</div>
     </div>
     <div class="flow-wrap">
       <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">👩</div><div class="flow-lbl">Alice</div></div>
@@ -557,7 +558,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="card">
     <div class="card-title">2. 디지털 서명 — 개인 키로 서명하고, 공개 키로 검증</div>
     <div class="concept-intro pubkey" style="margin-bottom:14px">
-      <div style="font-size:14px;color:var(--dim);line-height:1.7">반대 방향: Alice가 <strong style="color:var(--rose)">개인 키</strong>로 서명하면, 누구나 Alice의 <strong style="color:var(--plum)">공개 키</strong>로 "Alice가 직접 서명한 것이 맞다"고 검증할 수 있습니다.</div>
+      <div style="font-size:15px;color:var(--dim);line-height:1.7">반대 방향: Alice가 <strong style="color:var(--rose)">개인 키</strong>로 서명하면, 누구나 Alice의 <strong style="color:var(--plum)">공개 키</strong>로 "Alice가 직접 서명한 것이 맞다"고 검증할 수 있습니다.</div>
     </div>
     <div class="flow-wrap">
       <div class="flow-node"><div class="flow-icon" style="background:var(--plum-bg)">👩</div><div class="flow-lbl">Alice</div></div>
@@ -673,7 +674,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="hash-out" id="hashBOut"></div>
       </div>
     </div>
-    <div style="font-size:12.5px;color:var(--dim2);margin-top:10px;line-height:1.6">💡 B의 해시에서 <b style="color:var(--rose)">분홍색</b>은 A와 다른 자리예요. 느낌표 하나 차이로 거의 전부 바뀌죠? 참고로 여긴 <b>한글도 됩니다</b> — 해시는 어떤 데이터든 받거든요.</div>
+    <div style="font-size:12px;color:var(--dim2);margin-top:10px;line-height:1.6">💡 B의 해시에서 <b style="color:var(--rose)">분홍색</b>은 A와 다른 자리예요. 느낌표 하나 차이로 거의 전부 바뀌죠? 참고로 여긴 <b>한글도 됩니다</b> — 해시는 어떤 데이터든 받거든요.</div>
   </div>
 
   <div class="card">
