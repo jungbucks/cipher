@@ -6,7 +6,7 @@
 
 ## 규칙
 
-1. **콘텐츠 수정 위치**: 퀴즈 = `QUIZZES` 객체(탭당 3문항, 해시만 2), 브루트포스 문구 = `BF_PHRASES`. 페이지 설명·표는 각 `<section>` 마크업.
+1. **콘텐츠 수정 위치**: 퀴즈 = `QUIZZES` 객체(탭당 3문항, 총 18 — 보기 순서는 로드 때 섞이고 채점은 원래 번호 `a` 기준, 오답이면 [다시 풀기]), 브루트포스 문구 = `BF_PHRASES`. 페이지 설명·표는 각 `<section>` 마크업.
 2. **디자인**: 웜 페이퍼 팔레트(`:root` — bg `#FBF9F6`, amber·plum·teal·rose·green). hex 추가 전에 기존 변수 확인. 탭별 색 정체성(시저=amber, 전치=plum/teal, 대칭=amber, 공개=plum, 해시=green) 유지.
    - **타입 스케일(2026-07-24 정리, `:root` 주석에도 박아둠)**: 새 폰트 크기는 이 안에서만 고른다 — **라벨 11 · 캡션 12 · 컨트롤 13~14 · 본문/데이터 15 · 강조데이터 16 · h2 26 · 디스플레이 clamp(30,6vw,54)**. 아이콘/이모지 크기(18·20·22)는 텍스트 아니므로 예외. 임의의 12.5·13.5·14 본문 새로 넣지 말 것("제각각" 재발 방지).
    - **폰트 역할**: 한글/디스플레이 = Paperlogy(=`Paperozi` @font-face, 페이지 정체성·유지). 코드/암호문/알파벳/키 = `--mono`(=`ui-monospace,'SF Mono','Consolas',…` — 구 `Courier New`에서 2026-07-24 교체, 의존성 0). mono는 정렬 필요한 데이터에만.
@@ -17,7 +17,7 @@
 ## 검증법 (이 PC 특이사항)
 
 - 단일 파일이라 브라우저로 열면 끝. 자동 검증은 **file:// 프로브**: scratchpad에 iframe 프로브 작성 → 헤드리스 Edge `--headless=new --allow-file-access-from-files --user-data-dir=<임시프로필> --dump-dom`. ⚠️ `--user-data-dir` 없으면 기존 Edge에 위임돼 출력이 빈다.
-- 회귀 기준(2026-07-15, 16종 PASS): 브루트포스(25행·정답/오답·리셋), 해시(64자·diff·동일입력), 퀴즈 51버튼, 휠 52자·매핑 26칸, `rfEncrypt('HELLO',2)==='HLOEL'`, `colDecrypt('EODASREIERCEWDV','ZEBRA')==='WEAREDISCOVERED'`, latinNote.
+- 회귀 기준(2026-07-15, 16종 PASS): 브루트포스(25행·정답/오답·리셋), 해시(64자·diff·동일입력), 퀴즈 54버튼(18문항), 휠 52자·매핑 26칸, `rfEncrypt('HELLO',2)==='HLOEL'`, `colDecrypt('EODASREIERCEWDV','ZEBRA')==='WEAREDISCOVERED'`, latinNote.
 - 로직 검산 완료(2026-07-15): 레일펜스·열 전치 암/복호 왕복, 불규칙 열 전치의 짧은 열 처리 정확.
 
 ## 열 전치 — 기초/심화 (2026-07-24)
@@ -28,6 +28,14 @@
 - ⚠️ **기초판은 표준형**(열수만·자연순서)으로 구현 — 실제 교과서 표기와 다를 수 있어 화면에 "다르면 알려달라" 안내 박아둠. 교과서 원본 확인 시 조정 대상.
 - **검증(2026-07-24, 프로브 전건 PASS)**: 기초 enc/dec 왕복 cols=5(`WDVEIEASRRCEEOD`)·cols=3(`WRIOREESVEADCED`), 심화 ZEBRA 왕복(`EODASREIERCEWDV`), 헤더 기초=숫자·심화=글자, 2×속도 무오류. 스크린샷 확인.
 - ⚠️ **프로브 함정 2종**: ① `showPage`는 인라인 `event.target` 의존 → 프로그램 호출 시 에러(실제 클릭은 정상). 프로브는 `.page.active` 클래스 직접 토글로 우회. ② `let colAnimating` 등 최상위 let은 `window` 속성 아님 → `W.colAnimating` undefined. 애니메이션 완료 대기는 **`await W.colVisualize()`**(함수 선언이라 window에 있음)로.
+
+## 2026-11-02 개선 Phase A (내용 오류·상태 버그)
+
+- **휠 방향**: 바깥=평문, 안쪽=암호문. 안쪽 고리는 `rotate(-k/26*360)`(반시계) → 바깥 P 바로 안쪽에 P+k. 매핑표는 모드와 무관하게 윗줄 평문/아랫줄 암호문(=휠을 펼친 것), 복호화는 아래→위로 읽는다(`#mapDirLabel`). 시각화 강조는 바깥 평문·안쪽 암호문·표 같은 열.
+- **즉시 다시 그리기**: 레일 펜스 `rfDraw(animate)`·열 전치 `colDraw(animate)` 하나로 통일. 입력·슬라이더·키워드·모드 변경 = `draw(false)` 즉시, ▶시각화 = `draw(true)`. `makeAnim()` 타이머 묶음이 새 그리기마다 이전 타이머를 전부 취소(`ANIM_CANCEL`). 시저도 입력 변경 시 진행 중 시각화 취소.
+- 열 전치 예시 문장 자동 교체는 칸이 비었거나 예시(평문/기초·심화 예시 암호문)일 때만 — 학생 입력은 안 지움. `colEncrypt(input,key)` 헬퍼 추가.
+- `FEATURES` 플래그 객체(스크립트 맨 위)는 Phase C용 자리만 잡아둠(아직 사용처 없음).
+- 검증: Playwright(msedge) 프로브 67항목 PASS. ⚠️ `page.evaluate(()=>rfVisualize())`처럼 promise를 반환하면 애니메이션 끝까지 기다림 — 도중 조작 테스트는 `{ rfVisualize(); }`로.
 
 ## 이력·백로그
 
