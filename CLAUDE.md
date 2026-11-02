@@ -27,7 +27,7 @@
 - **1×/2× 속도**(`colSpeed`): `colVisualize` 안 `const D=ms=>delay(ms/colSpeed)`로 전 딜레이 배속.
 - ⚠️ **기초판은 표준형**(열수만·자연순서)으로 구현 — 실제 교과서 표기와 다를 수 있어 화면에 "다르면 알려달라" 안내 박아둠. 교과서 원본 확인 시 조정 대상.
 - **검증(2026-07-24, 프로브 전건 PASS)**: 기초 enc/dec 왕복 cols=5(`WDVEIEASRRCEEOD`)·cols=3(`WRIOREESVEADCED`), 심화 ZEBRA 왕복(`EODASREIERCEWDV`), 헤더 기초=숫자·심화=글자, 2×속도 무오류. 스크린샷 확인.
-- ⚠️ **프로브 함정 2종**: ① `showPage`는 인라인 `event.target` 의존 → 프로그램 호출 시 에러(실제 클릭은 정상). 프로브는 `.page.active` 클래스 직접 토글로 우회. ② `let colAnimating` 등 최상위 let은 `window` 속성 아님 → `W.colAnimating` undefined. 애니메이션 완료 대기는 **`await W.colVisualize()`**(함수 선언이라 window에 있음)로.
+- ⚠️ **프로브 함정 2종**: ① (2026-11-02 Phase B에서 해소) `showPage(id)`는 이제 프로그램 호출 가능. 탭 이동+주소 변경은 `goTab(id)`. ② `let colAnimating` 등 최상위 let은 `window` 속성 아님 → `W.colAnimating` undefined. 애니메이션 완료 대기는 **`await W.colVisualize()`**(함수 선언이라 window에 있음)로.
 
 ## 2026-11-02 개선 Phase A (내용 오류·상태 버그)
 
@@ -36,6 +36,16 @@
 - 열 전치 예시 문장 자동 교체는 칸이 비었거나 예시(평문/기초·심화 예시 암호문)일 때만 — 학생 입력은 안 지움. `colEncrypt(input,key)` 헬퍼 추가.
 - `FEATURES` 플래그 객체(스크립트 맨 위)는 Phase C용 자리만 잡아둠(아직 사용처 없음).
 - 검증: Playwright(msedge) 프로브 67항목 PASS. ⚠️ `page.evaluate(()=>rfVisualize())`처럼 promise를 반환하면 애니메이션 끝까지 기다림 — 도중 조작 테스트는 `{ rfVisualize(); }`로.
+
+## 2026-11-02 개선 Phase B (배치·조작부·탐색·접근성)
+
+- **시저 작업대**(`.caesar-bench`): 휠·입력·이동 칸 수·조작부·결과를 카드 하나에. 900px 이상 = 휠 왼쪽/조작 오른쪽(grid-template-areas), 미만 = 휠(70vw) → 슬라이더 → 결과 → 입력 → 조작부.
+- **공통 조작부**: `buildControls()`가 `.ctrl-bar[data-tab]`에 같은 순서로 생성 — [모드 암호화|복호화][▶ 암호화/복호화 시각화][⏸ 일시정지/▶ 재생][⏭ 한 단계][초기화][속도 1×|2×]. 설정은 `CTRL` 객체(탭별 anim·setMode·play·reset). 모드 표시는 `syncModeUI`.
+- **makeAnim**: 일시정지(held)·한 단계(`wait(g,ms,true)` = 단계 끝)·속도. ⏭를 멈춘 상태에서 누르면 첫 단계에서 멈춘 채 시작. 일시정지 버튼은 `aria-disabled`(포커스 유지 위해 disabled 안 씀).
+- **탭**: `.nav-wrap` sticky + 좌우 페이드(`navFade`), 주소 `#caesar…#hash`(`location.hash` → hashchange → `showPage`), 뒤로/앞으로 동작, 각 탭 끝 "다음: ○○ →"(해시=처음으로). role=tablist/tab/tabpanel, ←→ Home End.
+- **접근성**: 결과·피드백 aria-live=polite(진행 중엔 aria-busy), 휠 role=img+shift aria-label, :focus-visible, prefers-reduced-motion이면 ▶/⏭가 즉시 완료 상태(`reducedMotion()`) + CSS 전환 0s.
+- 레일 격자 칸 `minmax(18px,32px)`+aspect-ratio → 390px에서 15글자 가로 스크롤 없음.
+- 검증: probeB 41항목 + Phase A 67항목 회귀 PASS.
 
 ## 이력·백로그
 

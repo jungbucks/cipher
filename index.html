@@ -274,6 +274,58 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* ====== 해시 함수 ====== */
 .hash-out{font-family:var(--mono);font-size:12px;word-break:break-all;line-height:1.7;padding:10px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:9px;letter-spacing:.03em;color:var(--dim)}
 .hash-out .hd{color:var(--rose);font-weight:800;background:var(--rose-bg);border-radius:2px}
+
+/* ====== Phase B: 탭바(상단 고정·좌우 페이드) ====== */
+.nav-wrap{position:sticky;top:0;z-index:20;background:var(--bg)}
+.nav-wrap::before,.nav-wrap::after{content:'';position:absolute;top:0;bottom:2px;width:40px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:2}
+.nav-wrap::before{left:0;background:linear-gradient(to left,rgba(251,249,246,0),var(--bg) 80%)}
+.nav-wrap::after{right:0;background:linear-gradient(to right,rgba(251,249,246,0),var(--bg) 80%)}
+.nav-wrap.more-left::before,.nav-wrap.more-right::after{opacity:1}
+.nav-btn:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:-4px;border-radius:8px}
+.page-next{display:flex;justify-content:flex-end;margin-top:22px}
+
+/* ====== Phase B: 공통 조작부 [모드][▶][⏸][⏭][초기화][속도] ====== */
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ctrl-grp{display:inline-flex;align-items:center;gap:4px}
+.ctrl-lbl{font-size:12px;font-weight:700;color:var(--dim2);margin-right:2px}
+.btn-sm{padding:9px 14px;font-size:13px;min-height:40px}
+.btn[aria-disabled="true"],.btn[aria-disabled="true"]:hover,.btn:disabled,.btn:disabled:hover{opacity:.45;cursor:default;transform:none;box-shadow:none;border-color:var(--border);color:var(--dim)}
+
+/* ====== Phase B: 시저 작업대 — 휠 + 조작부 한 화면 ====== */
+.caesar-bench{display:grid;gap:14px 28px;grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "wheel" "shift" "result" "input" "ctrl"}
+.bench-title{grid-area:title;margin-bottom:0}
+.bench-wheel{grid-area:wheel}
+.bench-input{grid-area:input}
+.bench-shift{grid-area:shift}
+.bench-ctrl{grid-area:ctrl}
+.bench-result{grid-area:result}
+.caesar-bench .wheel-wrap{margin:0}
+#wheelSvg{width:min(70vw,300px);height:auto;display:block}
+.only-wide{display:none}
+@media(min-width:900px){
+  .caesar-bench{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"title title" "wheel input" "wheel shift" "wheel ctrl" "wheel result";align-items:start}
+  .bench-wheel{align-self:center}
+  .only-wide{display:inline}
+  .only-narrow{display:none}
+}
+
+/* ====== Phase B: 레일 격자 — 칸이 화면 폭에 맞춰 줄어듦(가로 스크롤 방지) ====== */
+.rf-cell{width:auto;height:auto;aspect-ratio:1/1;min-width:0}
+
+@media(max-width:600px){
+  .card{padding:18px 16px}
+  .rf-grid{gap:2px;padding:12px 8px}
+  .output-area{min-height:56px!important}
+}
+
+/* ====== Phase B: 키보드 포커스 표시 ====== */
+button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
+.slider:focus-visible{outline-offset:6px;border-radius:4px}
+
+/* ====== Phase B: 움직임 줄이기 설정 존중 ====== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important;animation-iteration-count:1!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
@@ -284,29 +336,30 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <p class="site-sub">암호화와 복호화가 어떻게 일어나는지, 눈으로 직접 확인해보세요.</p>
 </header>
 
-<nav class="nav">
-  <button class="nav-btn active" onclick="showPage('caesar')">🔄 시저 암호</button>
-  <button class="nav-btn" onclick="showPage('railfence')">🚂 레일 펜스</button>
-  <button class="nav-btn" onclick="showPage('columnar')">📊 열 전치</button>
-  <button class="nav-btn" onclick="showPage('symmetric')">🔑 대칭 키</button>
-  <button class="nav-btn" onclick="showPage('pubkey')">🔐 공개 키</button>
-  <button class="nav-btn" onclick="showPage('hash')">#️⃣ 해시 함수</button>
+<div class="nav-wrap">
+<nav class="nav" role="tablist" aria-label="암호 종류">
+  <button class="nav-btn active" role="tab" id="tab-caesar" aria-controls="page-caesar" aria-selected="true" tabindex="0" data-page="caesar">🔄 시저 암호</button>
+  <button class="nav-btn" role="tab" id="tab-railfence" aria-controls="page-railfence" aria-selected="false" tabindex="-1" data-page="railfence">🚂 레일 펜스</button>
+  <button class="nav-btn" role="tab" id="tab-columnar" aria-controls="page-columnar" aria-selected="false" tabindex="-1" data-page="columnar">📊 열 전치</button>
+  <button class="nav-btn" role="tab" id="tab-symmetric" aria-controls="page-symmetric" aria-selected="false" tabindex="-1" data-page="symmetric">🔑 대칭 키</button>
+  <button class="nav-btn" role="tab" id="tab-pubkey" aria-controls="page-pubkey" aria-selected="false" tabindex="-1" data-page="pubkey">🔐 공개 키</button>
+  <button class="nav-btn" role="tab" id="tab-hash" aria-controls="page-hash" aria-selected="false" tabindex="-1" data-page="hash">#️⃣ 해시 함수</button>
 </nav>
+</div>
 
 <!-- ===== CAESAR ===== -->
-<section class="page active" id="page-caesar">
+<section class="page active" id="page-caesar" role="tabpanel" aria-labelledby="tab-caesar">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(194,119,10,.1);color:var(--amber)">치환형 암호</div>
     <div class="cipher-name">시저 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Caesar Cipher)</span></div>
     <div class="cipher-desc">알파벳을 일정한 수만큼 밀어서 다른 글자로 바꾸는 가장 오래된 암호입니다. 로마의 율리우스 카이사르가 군사 통신에 사용했다고 전해집니다.</div>
   </div>
 
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-    <div style="grid-column:1/-1">
-      <div class="card">
-        <div class="card-title">알파벳 휠 — 아래 슬라이더를 움직이면 안쪽 고리가 돌아가요</div>
-        <div class="wheel-wrap">
-          <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300">
+  <div>
+      <div class="card caesar-bench">
+        <div class="card-title bench-title">알파벳 휠 — <span class="only-wide">오른쪽</span><span class="only-narrow">바로 아래</span> 슬라이더를 움직이면 안쪽 고리가 돌아가요</div>
+        <div class="wheel-wrap bench-wheel">
+          <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="알파벳 휠">
             <circle cx="150" cy="150" r="148" fill="none" stroke="var(--border)" stroke-width="1"/>
             <circle cx="150" cy="150" r="108" fill="none" stroke="var(--border)" stroke-width="1"/>
             <circle cx="150" cy="150" r="68"  fill="var(--s2)" stroke="var(--s3)" stroke-width="1"/>
@@ -320,38 +373,29 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             <circle cx="150" cy="4" r="4" fill="var(--amber-mid)" opacity=".9"/>
           </svg>
         </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="label-row"><span class="lbl">평문 입력</span></div>
-      <input id="caesarInput" class="inp" placeholder="HELLO WORLD" oninput="caesarLive();latinNote('caesarInput','caesarNote')" style="margin-bottom:2px">
-      <div class="inp-note" id="caesarNote">⚠️ 영문 알파벳만 암호화돼요 — 한글·숫자·기호는 자동으로 빠집니다</div>
-      <div style="margin-bottom:10px"></div>
-      <div class="label-row">
-        <span class="lbl">이동 칸 수 (Shift)</span>
-        <span class="lbl-val" id="shiftVal">3</span>
-      </div>
-      <input id="shiftSlider" type="range" min="1" max="25" value="3" class="slider" oninput="caesarShiftChange(this.value)">
-      <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-        <button class="btn btn-cyan" onclick="caesarAnimate()">▶ 암호화 시각화</button>
-        <button class="btn btn-ghost" onclick="caesarReset()">초기화</button>
-        <div class="chip-row" style="margin-left:auto">
-          <button class="chip active" id="cMode1" onclick="setCMode('enc')">암호화</button>
-          <button class="chip" id="cMode2" onclick="setCMode('dec')">복호화</button>
+        <div class="bench-input">
+          <div class="label-row"><label class="lbl" id="caesarInputLabel" for="caesarInput">평문 입력</label></div>
+          <input id="caesarInput" class="inp" placeholder="HELLO WORLD" oninput="caesarLive();latinNote('caesarInput','caesarNote')" style="margin-bottom:2px">
+          <div class="inp-note" id="caesarNote">⚠️ 영문 알파벳만 암호화돼요 — 한글·숫자·기호는 자동으로 빠집니다</div>
+        </div>
+        <div class="bench-shift">
+          <div class="label-row">
+            <label class="lbl" for="shiftSlider">이동 칸 수 (Shift)</label>
+            <span class="lbl-val" id="shiftVal">3</span>
+          </div>
+          <input id="shiftSlider" type="range" min="1" max="25" value="3" class="slider" oninput="caesarShiftChange(this.value)" style="margin:6px 0 0">
+        </div>
+        <div class="ctrl-bar bench-ctrl" data-tab="caesar"></div>
+        <div class="bench-result">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
+            <div class="card-title" style="margin-bottom:0">결과</div>
+            <button class="copy-mini" onclick="copyText('caesarOutput')">복사</button>
+          </div>
+          <div id="caesarOutput" class="output-area" style="min-height:64px" aria-live="polite"></div>
         </div>
       </div>
-    </div>
 
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px">
-        <div class="card-title" style="margin-bottom:0">결과</div>
-        <button class="copy-mini" onclick="copyText('caesarOutput')">복사</button>
-      </div>
-      <div id="caesarOutput" class="output-area" style="min-height:80px"></div>
-    </div>
-
-    <div class="card" style="grid-column:1/-1">
       <div class="card-title">매핑 테이블 (shift = <span id="mapShiftLabel">3</span>) · <span id="mapDirLabel">윗줄 평문(바깥 고리) → 아랫줄 암호문(안쪽 고리)</span></div>
       <div style="overflow-x:auto">
         <table class="map-table" id="mapTable">
@@ -361,7 +405,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
     </div>
 
-    <div class="card" style="grid-column:1/-1">
+    <div class="card">
       <div class="card-title">🕵️ 해독 도전 — 열쇠 없이 부수기 (브루트포스)</div>
       <p style="font-size:15px;color:var(--dim);line-height:1.7;margin-bottom:10px">
         적의 암호문을 가로챘습니다: <span class="ci-locked" style="margin:0 2px">🔒 <span id="bfCipher"></span></span><br>
@@ -372,14 +416,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="btn btn-ghost" onclick="bfNew()">🔀 새 암호문 가로채기</button>
       </div>
       <div id="bfList"></div>
-      <div class="ci-out" id="bfOut" style="margin-top:10px"></div>
+      <div class="ci-out" id="bfOut" style="margin-top:10px" aria-live="polite"></div>
     </div>
   </div>
   <div class="quiz-mount" data-quiz="caesar"></div>
 </section>
 
 <!-- ===== RAIL FENCE ===== -->
-<section class="page" id="page-railfence">
+<section class="page" id="page-railfence" role="tabpanel" aria-labelledby="tab-railfence">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(109,40,217,.1);color:var(--plum)">전치형 암호</div>
     <div class="cipher-name">레일 펜스 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Rail Fence Cipher)</span></div>
@@ -389,20 +433,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="card">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
       <div style="flex:1;min-width:180px">
-        <div class="label-row"><span class="lbl">입력 텍스트</span></div>
+        <div class="label-row"><label class="lbl" id="rfInputLabel" for="rfInput">평문 입력</label></div>
         <input id="rfInput" class="inp" placeholder="WEAREDISCOVERED" value="WEAREDISCOVERED" oninput="latinNote('rfInput','rfNote');rfDraw(false)">
         <div class="inp-note" id="rfNote">⚠️ 영문 알파벳만 지원돼요 — 그 외 글자(공백 포함)는 자동으로 빠집니다</div>
       </div>
       <div>
-        <div class="label-row"><span class="lbl">레일 수</span><span class="lbl-val" id="rfRailVal">3</span></div>
+        <div class="label-row"><label class="lbl" for="rfRails">레일 수</label><span class="lbl-val" id="rfRailVal">3</span></div>
         <input id="rfRails" type="range" min="2" max="4" value="3" class="slider" style="width:120px" oninput="document.getElementById('rfRailVal').textContent=this.value;rfDraw(false)">
       </div>
-      <div class="chip-row">
-        <button class="chip active purple" id="rfMode1" onclick="setRFMode('enc')">암호화</button>
-        <button class="chip" id="rfMode2" onclick="setRFMode('dec')">복호화</button>
-      </div>
-      <button class="btn btn-cyan" onclick="rfVisualize()">▶ 시각화</button>
     </div>
+    <div class="ctrl-bar" data-tab="railfence" style="margin-bottom:14px"></div>
 
     <div class="card-title">지그재그 배열</div>
     <div id="rfGrid" class="rf-grid"></div>
@@ -414,7 +454,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div id="rfRailRead" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="result-row" style="margin-top:14px">
       <span class="result-label">결과</span>
-      <span id="rfResult" class="result-text"></span>
+      <span id="rfResult" class="result-text" aria-live="polite"></span>
       <button class="copy-mini" onclick="copyText('rfResult')">복사</button>
     </div>
   </div>
@@ -422,7 +462,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </section>
 
 <!-- ===== COLUMNAR ===== -->
-<section class="page" id="page-columnar">
+<section class="page" id="page-columnar" role="tabpanel" aria-labelledby="tab-columnar">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(13,115,119,.1);color:var(--teal)">전치형 암호</div>
     <div class="cipher-name">열 전치 암호 <span style="font-size:16px;color:var(--dim);font-weight:400">(Columnar Transposition)</span></div>
@@ -437,25 +477,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="card">
     <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px">
       <div style="flex:2;min-width:160px">
-        <div class="label-row"><span class="lbl" id="colInputLabel">평문</span></div>
+        <div class="label-row"><label class="lbl" id="colInputLabel" for="colInput">평문 입력</label></div>
         <input id="colInput" class="inp" placeholder="WEAREDISCOVERED" value="WEAREDISCOVERED" oninput="latinNote('colInput','colNote');colDraw(false)">
         <div class="inp-note" id="colNote">⚠️ 영문 알파벳만 지원돼요 — 그 외 글자(공백 포함)는 자동으로 빠집니다</div>
       </div>
       <div id="colColsWrap" style="flex:1;min-width:150px">
-        <div class="label-row"><span class="lbl">열 수</span><span class="lbl-val" id="colColsVal">5</span></div>
+        <div class="label-row"><label class="lbl" for="colColsSlider">열 수</label><span class="lbl-val" id="colColsVal">5</span></div>
         <input id="colColsSlider" type="range" min="3" max="6" value="5" class="slider" oninput="colColsChange(this.value)">
       </div>
       <div id="colKeyWrap" style="flex:1;min-width:100px;display:none">
-        <div class="label-row"><span class="lbl">키워드</span></div>
+        <div class="label-row"><label class="lbl" for="colKey">키워드</label></div>
         <input id="colKey" class="inp" placeholder="ZEBRA" value="ZEBRA" oninput="colKeyChange()">
       </div>
-      <div class="chip-row">
-        <button class="chip active" id="colMode1" onclick="setColMode('enc')">암호화</button>
-        <button class="chip" id="colMode2" onclick="setColMode('dec')">복호화</button>
-      </div>
-      <button class="btn btn-cyan" onclick="colVisualize()">▶ 시각화</button>
-      <span class="spd-row"><button class="spd-btn active" id="colSpd1" onclick="setColSpeed(1)">1×</button><button class="spd-btn" id="colSpd2" onclick="setColSpeed(2)">2×</button></span>
     </div>
+    <div class="ctrl-bar" data-tab="columnar" style="margin-bottom:12px"></div>
     <div id="colBasicNote" style="font-size:12px;color:var(--dim2);line-height:1.6;margin-bottom:4px">📖 교과서식 기초판: 평문을 <b>열 수</b>만큼의 표에 채우고 <b>왼쪽 열부터 차례로</b> 세로로 읽습니다(키워드 없음). <span style="color:var(--teal)">※ 교과서마다 읽는 방법이 조금 다를 수 있어요.</span></div>
 
     <div class="card-title">격자 배열</div>
@@ -468,7 +503,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div id="colReading" class="col-reading"></div>
     <div class="result-row" style="margin-top:14px">
       <span class="result-label">결과</span>
-      <span id="colResult" class="result-text"></span>
+      <span id="colResult" class="result-text" aria-live="polite"></span>
       <button class="copy-mini" onclick="copyText('colResult')">복사</button>
     </div>
   </div>
@@ -476,7 +511,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </section>
 
 <!-- ===== SYMMETRIC KEY ===== -->
-<section class="page" id="page-symmetric">
+<section class="page" id="page-symmetric" role="tabpanel" aria-labelledby="tab-symmetric">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(194,119,10,.1);color:var(--amber)">대칭 키 암호화</div>
     <div class="cipher-name">Symmetric Key Encryption</div>
@@ -545,14 +580,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="ci-key-btn" onclick="ciTry('sym','K')">🔑 비밀 키 K</button>
         <button class="ci-key-btn" onclick="ciTry('sym','X')">🔑 다른 키 X</button>
       </div>
-      <div class="ci-out" id="ci-sym-out"></div>
+      <div class="ci-out" id="ci-sym-out" aria-live="polite"></div>
     </div>
   </div>
   <div class="quiz-mount" data-quiz="symmetric"></div>
 </section>
 
 <!-- ===== PUBLIC KEY ===== -->
-<section class="page" id="page-pubkey">
+<section class="page" id="page-pubkey" role="tabpanel" aria-labelledby="tab-pubkey">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(109,40,217,.1);color:var(--plum)">공개 키 암호화</div>
     <div class="cipher-name">Public Key Encryption <span style="font-size:16px;color:var(--dim);font-weight:400">(비대칭 암호화)</span></div>
@@ -662,14 +697,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <button class="ci-key-btn" onclick="ciTry('pub','bob-pub')">🔓 Bob 공개 키</button>
         <button class="ci-key-btn" onclick="ciTry('pub','bob-priv')">🗝️ Bob 개인 키</button>
       </div>
-      <div class="ci-out" id="ci-pub-out"></div>
+      <div class="ci-out" id="ci-pub-out" aria-live="polite"></div>
     </div>
   </div>
   <div class="quiz-mount" data-quiz="pubkey"></div>
 </section>
 
 <!-- ===== HASH ===== -->
-<section class="page" id="page-hash">
+<section class="page" id="page-hash" role="tabpanel" aria-labelledby="tab-hash">
   <div class="cipher-hd">
     <div class="cipher-tag" style="background:rgba(21,128,61,.1);color:var(--green)">단방향 함수</div>
     <div class="cipher-name">해시 함수 <span style="font-size:16px;color:var(--dim);font-weight:400">(Hash Function)</span></div>
@@ -699,7 +734,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="hash-out" id="hashAOut"></div>
       </div>
       <div>
-        <div class="label-row"><span class="lbl">입력 B</span><span class="lbl-val" id="hashDiffCnt" style="color:var(--rose)"></span></div>
+        <div class="label-row"><span class="lbl">입력 B</span><span class="lbl-val" id="hashDiffCnt" style="color:var(--rose)" aria-live="polite"></span></div>
         <input id="hashB" class="inp" value="HELLO!" oninput="hashLive()" style="margin-bottom:8px">
         <div class="hash-out" id="hashBOut"></div>
       </div>
@@ -742,19 +777,55 @@ const ALPHA='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 /* 취소 가능한 애니메이션 타이머 묶음 — start()를 부르면 진행 중인 대기를 모두 취소하고 새 세대를 시작한다.
    취소된 wait()는 ANIM_CANCEL로 reject → 호출한 쪽 try/catch에서 조용히 끝낸다. */
 const ANIM_CANCEL=Symbol('cancel');
+/* 일시정지·한 단계·속도(1×/2×)도 여기서 처리한다.
+   - wait(g,ms,boundary): boundary=true인 대기 = "한 단계"의 끝(글자 하나가 처리된 순간).
+   - 일시정지 중엔 모든 대기가 멈춰 있다가(held) 재생하면 이어서 진행.
+   - 한 단계: 멈춘 대기를 풀고, 다음 boundary 대기까지 빠르게 진행한 뒤 다시 멈춘다.
+   - onState(running,paused): 조작부 버튼 상태 갱신용 콜백. */
 function makeAnim(){
-  let gen=0;const pending=new Map();
-  return {
-    start(){gen++;pending.forEach((rej,t)=>{clearTimeout(t);rej(ANIM_CANCEL);});pending.clear();return gen;},
+  let gen=0,paused=false,stepping=false,running=false,speed=1;
+  const timers=new Map();let held=[];
+  const api={
+    onState:null,
+    get running(){return running;}, get paused(){return paused;}, get speed(){return speed;},
+    emit(){api.onState&&api.onState(running,paused);},
+    start(){
+      gen++;
+      timers.forEach((rej,t)=>{clearTimeout(t);rej(ANIM_CANCEL);});timers.clear();
+      held.forEach(h=>h.rej(ANIM_CANCEL));held=[];
+      paused=false;stepping=false;running=false;api.emit();
+      return gen;
+    },
+    begin(g){if(g===gen){running=true;api.emit();}},
+    end(g){if(g===gen){running=false;paused=false;stepping=false;api.emit();}},
     alive(g){return g===gen;},
-    wait(g,ms){return new Promise((res,rej)=>{
+    setSpeed(s){speed=s;},
+    holdForStep(){paused=true;stepping=true;api.emit();},       // 시작하자마자 첫 단계에서 멈춤
+    pause(){if(running){paused=true;stepping=false;api.emit();}},
+    resume(){if(!paused)return;paused=false;stepping=false;const h=held;held=[];h.forEach(x=>x.res());api.emit();},
+    step(){
+      if(!running)return;
+      paused=true;stepping=true;
+      const h=held;held=[];h.forEach(x=>x.res());api.emit();
+    },
+    wait(g,ms,boundary){return new Promise((res,rej)=>{
       if(g!==gen){rej(ANIM_CANCEL);return;}
-      const t=setTimeout(()=>{pending.delete(t);g===gen?res():rej(ANIM_CANCEL);},ms);
-      pending.set(t,rej);
+      const go=()=>{
+        if(g!==gen){rej(ANIM_CANCEL);return;}
+        if(paused){
+          if(stepping&&!boundary){res();return;}           // 한 단계 진행 중: 단계 끝까지는 기다리지 않음
+          stepping=false;held.push({res,rej});api.emit();return;
+        }
+        res();
+      };
+      if(paused){go();return;}
+      const t=setTimeout(()=>{timers.delete(t);go();},ms/speed);
+      timers.set(t,rej);
     });},
-    later(g,fn,ms){const t=setTimeout(()=>{pending.delete(t);if(g===gen)fn();},ms);pending.set(t,()=>{});},
   };
+  return api;
 }
+function reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
 function clean(s){return s.toUpperCase().replace(/[^A-Z ]/g,'');}
 /* 영문 외 문자가 입력되면 안내 문구 표시 (한글이 조용히 사라지는 혼란 방지) */
 function latinNote(inpId,noteId){
@@ -768,21 +839,86 @@ function copyText(id){
   const orig=el.style.color;el.style.color='var(--amber)';
   setTimeout(()=>el.style.color=orig,800);
 }
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  event.target.classList.add('active');
+// ======================== 탭 전환 · 주소(#해시) · 키보드 ========================
+const TAB_ORDER=['caesar','railfence','columnar','symmetric','pubkey','hash'];
+const TAB_NAMES={caesar:'시저 암호',railfence:'레일 펜스',columnar:'열 전치',symmetric:'대칭 키',pubkey:'공개 키',hash:'해시 함수'};
+/* 탭 화면만 바꾼다(주소는 안 건드림). opts.focus=탭 버튼에 포커스, opts.scroll=탭바 바로 아래로 화면 이동 */
+function showPage(id,opts={}){
+  if(!TAB_ORDER.includes(id))id='caesar';
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+id));
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    const on=b.dataset.page===id;
+    b.classList.toggle('active',on);b.setAttribute('aria-selected',on?'true':'false');b.tabIndex=on?0:-1;
+  });
+  const btn=document.getElementById('tab-'+id), nav=document.querySelector('.nav');
+  if(btn&&nav){                                   // 현재 탭이 탭바 안에서 보이도록 가로 스크롤(가운데로)
+    const target=btn.offsetLeft-(nav.clientWidth-btn.offsetWidth)/2;
+    nav.scrollLeft=Math.max(0,target);
+    navFade();
+  }
+  if(opts.focus&&btn)btn.focus({preventScroll:true});
+  if(opts.scroll){
+    const hd=document.querySelector('.site-header');   // 탭바의 원래 자리 = 머리말 바로 아래(고정 중엔 rect가 0이라 머리말로 계산)
+    const y=hd.offsetTop+hd.offsetHeight;
+    if(window.scrollY>y)window.scrollTo(0,y);
+  }
+}
+/* 탭으로 이동 = 주소의 #해시를 바꾼다 → 뒤로/앞으로 버튼이 동작하고, hashchange에서 화면을 바꾼다 */
+function goTab(id,opts={}){
+  if(('#'+id)===location.hash){showPage(id,opts);return;}
+  pendingTabOpts=opts;
+  location.hash=id;
+}
+let pendingTabOpts=null;
+function tabFromHash(){const h=decodeURIComponent((location.hash||'').slice(1));return TAB_ORDER.includes(h)?h:null;}
+window.addEventListener('hashchange',()=>{
+  const id=tabFromHash();if(!id)return;
+  const o=pendingTabOpts||{scroll:true};pendingTabOpts=null;
+  showPage(id,o);
+});
+/* 모바일 탭바: 가려진 탭이 있으면 그쪽 가장자리를 흐리게(페이드) */
+function navFade(){
+  const nav=document.querySelector('.nav'),wrap=document.querySelector('.nav-wrap');
+  if(!nav||!wrap)return;
+  wrap.classList.toggle('more-left',nav.scrollLeft>2);
+  wrap.classList.toggle('more-right',nav.scrollLeft+nav.clientWidth<nav.scrollWidth-2);
+}
+function initTabs(){
+  const nav=document.querySelector('.nav');
+  nav.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>goTab(b.dataset.page,{scroll:true})));
+  nav.addEventListener('keydown',e=>{
+    const cur=TAB_ORDER.indexOf(document.activeElement?.dataset?.page);
+    if(cur<0)return;
+    let next=null;
+    if(e.key==='ArrowRight')next=(cur+1)%TAB_ORDER.length;
+    else if(e.key==='ArrowLeft')next=(cur-1+TAB_ORDER.length)%TAB_ORDER.length;
+    else if(e.key==='Home')next=0;
+    else if(e.key==='End')next=TAB_ORDER.length-1;
+    if(next===null)return;
+    e.preventDefault();
+    goTab(TAB_ORDER[next],{focus:true,scroll:true});
+  });
+  nav.addEventListener('scroll',navFade,{passive:true});
+  window.addEventListener('resize',navFade);
+  // 각 탭 맨 아래 "다음: ○○ →" (해시 탭은 "처음으로")
+  TAB_ORDER.forEach((id,i)=>{
+    const page=document.getElementById('page-'+id);
+    const next=TAB_ORDER[i+1];
+    const div=document.createElement('div');div.className='page-next';
+    const b=document.createElement('button');b.className='btn btn-ghost';
+    b.textContent=next?`다음: ${TAB_NAMES[next]} →`:`↺ 처음으로: ${TAB_NAMES.caesar}`;
+    b.addEventListener('click',()=>goTab(next||'caesar',{scroll:true}));
+    div.appendChild(b);page.appendChild(div);
+  });
+  showPage(tabFromHash()||'caesar');
 }
 
 // ======================== CAESAR ========================
 let caesarMode='enc';
-let caesarAnimTimer=null;
 
 function setCMode(m){
   caesarMode=m;
-  document.getElementById('cMode1').classList.toggle('active',m==='enc');
-  document.getElementById('cMode2').classList.toggle('active',m==='dec');
+  syncModeUI('caesar',m);
   caesarLive();
 }
 
@@ -816,6 +952,8 @@ function caesarShiftChange(v){
   const deg=-(v/26)*360;
   document.getElementById('innerRing').style.transform=`rotate(${deg}deg)`;
   document.getElementById('innerRing').style.transformOrigin='150px 150px';
+  document.getElementById('wheelSvg').setAttribute('aria-label',
+    `알파벳 휠: 이동 칸 수 ${v}. 바깥 고리(평문) A 바로 안쪽에 안쪽 고리(암호문) ${ALPHA[(+v)%26]}가 있어요.`);
   updateMapTable(+v);
   caesarLive();
 }
@@ -846,9 +984,8 @@ function caesarClearHL(){
     document.getElementById('mp'+j)?.classList.remove('hl');document.getElementById('mc'+j)?.classList.remove('hl');
   }
 }
-function caesarStopAnim(){
-  if(caesarAnimTimer){clearTimeout(caesarAnimTimer);caesarAnimTimer=null;}
-}
+const caesarAnim=makeAnim();
+function caesarStopAnim(){caesarAnim.start();}
 
 function caesarEncode(s,shift,enc){
   return s.split('').map(c=>{
@@ -869,11 +1006,15 @@ function caesarLive(){
   updateMapTable(shift);
 }
 
-function caesarAnimate(){
-  caesarStopAnim();
+/* ▶ 시각화. startPaused=true(⏭ 한 단계로 시작)면 첫 글자에서 멈춘 채 시작.
+   움직임 줄이기 설정이면 애니메이션 없이 바로 완료 상태를 보여준다. */
+async function caesarAnimate(startPaused){
   const DEFAULT='HELLO WORLD';                 // 입력칸 placeholder와 같은 값
   const s=clean(document.getElementById('caesarInput').value)||DEFAULT;
   if(!document.getElementById('caesarInput').value) document.getElementById('caesarInput').value=DEFAULT;
+  if(reducedMotion()){caesarLive();return;}
+  const g=caesarAnim.start();
+  if(startPaused===true)caesarAnim.holdForStep();
   const shift=+document.getElementById('shiftSlider').value;
   const enc=caesarMode==='enc';
   const chars=s.split('');
@@ -881,12 +1022,15 @@ function caesarAnimate(){
   document.getElementById('caesarOutput').innerHTML=chars.map((c,i)=>
     `<span class="char-out" id="co${i}">${c==' '?'&nbsp;':c}</span>`).join('');
   caesarClearHL();
-
-  function step(i){
-    if(i>=chars.length){caesarAnimTimer=null;return;}
-    const c=chars[i];
+  caesarAnim.begin(g);
+  try{
+    for(let i=0;i<chars.length;i++) await caesarStep(g,i,chars[i],shift,enc);
+  }catch(e){if(e!==ANIM_CANCEL)throw e;return;}
+  caesarAnim.end(g);
+}
+async function caesarStep(g,i,c,shift,enc){
     const el=document.getElementById('co'+i);
-    if(c===' '){el.className='char-out space done';step(i+1);return;}
+    if(c===' '){el.className='char-out space done';return;}
     const idx=ALPHA.indexOf(c);
     const outIdx=enc?(idx+shift)%26:(idx-shift+26)%26;
     const outC=ALPHA[outIdx];
@@ -900,28 +1044,27 @@ function caesarAnimate(){
     document.getElementById('il'+cipherIdx)?.classList.add('hl');
 
     el.classList.add('lit');
-    caesarAnimTimer=setTimeout(()=>{
-      el.textContent=outC;
-      el.classList.remove('lit');el.classList.add('done');
-      caesarAnimTimer=setTimeout(()=>step(i+1),120);
-    },280);
-  }
-  step(0);
+    await caesarAnim.wait(g,280,true);          // ← "한 단계"의 끝: 이 글자가 휠·표에 강조된 상태
+    el.textContent=outC;
+    el.classList.remove('lit');el.classList.add('done');
+    await caesarAnim.wait(g,120);
 }
 
+/* 초기화 = 시각화 멈춤 + 입력 비우기 + 이동 칸 수 3 + 암호화 모드 */
 function caesarReset(){
   caesarStopAnim();
   document.getElementById('caesarInput').value='';
-  document.getElementById('caesarOutput').innerHTML='';
-  caesarClearHL();
+  latinNote('caesarInput','caesarNote');
+  caesarMode='enc';syncModeUI('caesar','enc');
+  document.getElementById('shiftSlider').value=3;
+  caesarShiftChange(3);
 }
 
 // ======================== RAIL FENCE ========================
 let rfMode='enc';
 function setRFMode(m){
   rfMode=m;
-  document.getElementById('rfMode1').classList.toggle('active',m==='enc');
-  document.getElementById('rfMode2').classList.toggle('active',m==='dec');
+  syncModeUI('railfence',m);
   rfDraw(false);
 }
 
@@ -954,19 +1097,28 @@ function rfDecrypt(cipher,rails){
 }
 
 /* ▶ 시각화 = 과정을 애니메이션으로 다시 보여주기 */
-function rfVisualize(){
+function rfVisualize(startPaused){
   let text=document.getElementById('rfInput').value.toUpperCase().replace(/[^A-Z]/g,'');
   if(!text){text='WEAREDISCOVERED';document.getElementById('rfInput').value=text;latinNote('rfInput','rfNote');}
-  return rfDraw(true);
+  if(reducedMotion())return rfDraw(false);     // 움직임 줄이기: 바로 완료 상태
+  return rfDraw(true,startPaused===true);
+}
+/* 초기화 = 예시 문장 + 레일 3 + 암호화 모드 */
+function rfReset(){
+  document.getElementById('rfInput').value='WEAREDISCOVERED';latinNote('rfInput','rfNote');
+  document.getElementById('rfRails').value=3;document.getElementById('rfRailVal').textContent='3';
+  setRFMode('enc');
 }
 
 /* 입력·레일 수·모드가 바뀌면 rfDraw(false)로 즉시 다시 그린다. 그릴 때마다 rfAnim.start()로
    진행 중이던 애니메이션 타이머를 모두 취소하므로, 시각화 도중 슬라이더를 움직여도 글자가 섞이지 않는다. */
 const rfAnim=makeAnim();
-async function rfDraw(animate){
+async function rfDraw(animate,startPaused){
   const g=rfAnim.start();
+  if(animate){ if(startPaused)rfAnim.holdForStep(); rfAnim.begin(g); }
   try{ await rfDrawBody(g,animate); }
-  catch(e){ if(e!==ANIM_CANCEL)throw e; }
+  catch(e){ if(e!==ANIM_CANCEL)throw e; return; }
+  rfAnim.end(g);
 }
 async function rfDrawBody(g,animate){
   const text=document.getElementById('rfInput').value.toUpperCase().replace(/[^A-Z]/g,'');
@@ -974,7 +1126,7 @@ async function rfDrawBody(g,animate){
   const grid=document.getElementById('rfGrid');
   const railRead=document.getElementById('rfRailRead');
   const leg=document.getElementById('rfLegend');
-  const W=ms=>rfAnim.wait(g,ms);
+  const W=(ms,step)=>rfAnim.wait(g,ms,step);   // step=true: "한 단계"의 끝
   if(!text){                                   // 입력이 비면 화면도 비운다
     grid.innerHTML='';railRead.innerHTML='';leg.innerHTML='';
     document.getElementById('rfResult').textContent='';
@@ -989,7 +1141,7 @@ async function rfDrawBody(g,animate){
   const cols=fenceText.length;
 
   // build grid (애니메이션이 아니면 처음부터 보이는 상태로 만든다)
-  grid.style.gridTemplateColumns=`repeat(${cols},32px)`;
+  grid.style.gridTemplateColumns=`repeat(${cols},minmax(18px,32px))`;   // 좁은 화면에선 칸이 줄어듦
   grid.innerHTML='';
   for(let r=0;r<rails;r++){
     for(let c=0;c<cols;c++){
@@ -1011,11 +1163,9 @@ async function rfDrawBody(g,animate){
 
   // animate in
   if(animate){
-    for(let c=0;c<cols;c++){
-      for(let r=0;r<rails;r++){
-        await W(40);
-        grid.children[r*cols+c].classList.add('show');
-      }
+    for(let c=0;c<cols;c++){                     // 한 열(=글자 하나)씩 나타남
+      for(let r=0;r<rails;r++)grid.children[r*cols+c].classList.add('show');
+      await W(40*rails,true);
     }
     await W(200);
   }
@@ -1043,14 +1193,13 @@ async function rfDrawBody(g,animate){
       railRead.appendChild(row);
       if(animate){
         await W(150);
-        charWrap.querySelectorAll('span').forEach((sp,i)=>{
-          rfAnim.later(g,()=>{
-            sp.style.boxShadow=`0 0 8px ${RAIL_COLORS[r]}`;
-            const gCell=grid.children[r*cols+(+sp.dataset.col)];
-            if(gCell)gCell.classList.add('read-hl');
-          },i*80);
-        });
-        await W(chars.length*80+200);
+        for(const sp of charWrap.querySelectorAll('span')){   // 글자 하나씩 읽기
+          sp.style.boxShadow=`0 0 8px ${RAIL_COLORS[r]}`;
+          const gCell=grid.children[r*cols+(+sp.dataset.col)];
+          if(gCell)gCell.classList.add('read-hl');
+          await W(80,true);
+        }
+        await W(200);
       }
     }
   } else {
@@ -1072,7 +1221,7 @@ async function rfDrawBody(g,animate){
       sp.style.cssText=`font-family:var(--mono);font-size:15px;font-weight:700;color:${RAIL_COLORS[r]};padding:2px 5px;background:var(--s2);border-radius:4px;border:1px solid ${RAIL_COLORS[r]}40`;
       sp.textContent=fenceText[c];
       charWrap.appendChild(sp);
-      if(animate)await W(140);
+      if(animate)await W(140,true);
     }
   }
 
@@ -1082,10 +1231,8 @@ async function rfDrawBody(g,animate){
 function delay(ms){return new Promise(r=>setTimeout(r,ms));}
 
 // ======================== COLUMNAR ========================
-let colAnimating=false;
 let colMode='enc';
 let colLevel='basic';   // 'basic'(교과서식 열수) | 'adv'(키워드)
-let colSpeed=1;
 
 // 기초판 암호화: 평문을 cols열 표에 행 순서로 채우고 왼쪽 열부터 세로로 읽기
 function basicEncrypt(input,cols){
@@ -1115,17 +1262,18 @@ function colColsChange(v){
   else colDraw(false);
 }
 
-function setColSpeed(s){
-  colSpeed=s;
-  document.getElementById('colSpd1').classList.toggle('active',s===1);
-  document.getElementById('colSpd2').classList.toggle('active',s===2);
+function setColSpeed(s){setSpeed('columnar',s);}   // 예전 이름 유지(속도는 공통 조작부에서)
+/* 초기화 = 예시 문장 + 열 수 5 + 키워드 ZEBRA + 암호화 모드(기초/심화 단계는 유지) */
+function colReset(){
+  document.getElementById('colInput').value='WEAREDISCOVERED';
+  document.getElementById('colColsSlider').value=5;document.getElementById('colColsVal').textContent='5';
+  document.getElementById('colKey').value='ZEBRA';
+  setColMode('enc');
 }
 
 function setColMode(m){
   colMode=m;
-  document.getElementById('colMode1').classList.toggle('active',m==='enc');
-  document.getElementById('colMode2').classList.toggle('active',m==='dec');
-  document.getElementById('colInputLabel').textContent=m==='enc'?'평문':'암호문';
+  syncModeUI('columnar',m);
   // 칸이 비었거나 예시 문장(또는 기초·심화 어느 쪽의 예시 암호문)일 때만 현재 단계·모드의 예시로 바꿔 넣는다
   // — 학생이 직접 쓴 글은 지우지 않음
   const inp=document.getElementById('colInput');
@@ -1181,17 +1329,21 @@ function colDecrypt(cipher,key){
 /* ▶ 시각화 = 과정을 애니메이션으로 다시 보여주기. 입력·열 수·키워드·모드가 바뀌면 colDraw(false)로 즉시 다시 그린다.
    그릴 때마다 colAnim.start()가 진행 중이던 타이머를 모두 취소한다(글자 섞임 방지). */
 const colAnim=makeAnim();
-function colVisualize(){ return colDraw(true); }
-async function colDraw(animate){
+function colVisualize(startPaused){
+  if(reducedMotion())return colDraw(false);     // 움직임 줄이기: 바로 완료 상태
+  return colDraw(true,startPaused===true);
+}
+async function colDraw(animate,startPaused){
   const g=colAnim.start();
-  colAnimating=!!animate;
+  if(animate){ if(startPaused)colAnim.holdForStep(); colAnim.begin(g); }
   try{ await colDrawBody(g,animate); }
   catch(e){ if(e!==ANIM_CANCEL)throw e; return; }
-  if(colAnim.alive(g))colAnimating=false;
+  colAnim.end(g);
 }
 async function colDrawBody(g,animate){
   // 속도 배속(1×/2×) · 즉시 그리기면 기다리지 않음 · 더 새 그리기가 시작됐으면 여기서 멈춤
-  const D=ms=>{ if(!colAnim.alive(g))throw ANIM_CANCEL; return animate?colAnim.wait(g,ms/colSpeed):null; };
+  // step=true: "한 단계"의 끝(글자 하나 처리)
+  const D=(ms,step)=>{ if(!colAnim.alive(g))throw ANIM_CANCEL; return animate?colAnim.wait(g,ms,step):null; };
   const isEnc=colMode==='enc';
   let input=document.getElementById('colInput').value.toUpperCase().replace(/[^A-Z]/g,'');
 
@@ -1272,7 +1424,7 @@ async function colDrawBody(g,animate){
 
   if(isEnc){
     // 평문을 행 순서로 채워 넣기
-    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const td=document.getElementById(`ctd${r}_${c}`);await D(30);td.style.transition=tr;td.style.opacity='1';td.style.transform='translateY(0)';}
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const td=document.getElementById(`ctd${r}_${c}`);td.style.transition=tr;td.style.opacity='1';td.style.transform='translateY(0)';await D(30,gridChars[r][c]!=='_');}
     await D(400);
     for(const c of sortedCols){
       const th=document.getElementById(`cth${c}`);th.classList.add('sorted');
@@ -1280,7 +1432,7 @@ async function colDrawBody(g,animate){
       for(let r=0;r<rows;r++){
         const ch=gridChars[r][c];
         const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch==='_'?'•':ch;readEl.appendChild(sp);
-        await D(80);sp.classList.add('lit');
+        await D(80,true);sp.classList.add('lit');
         if(ch!=='_')result+=ch;
       }
       await D(200);
@@ -1294,24 +1446,26 @@ async function colDrawBody(g,animate){
         if(td&&gridChars[r][c]!==''){
           td.style.transition=tr;td.style.opacity='1';
           td.style.background='rgba(13,115,119,.08)';td.style.color='var(--teal)';td.style.borderColor='rgba(13,115,119,.2)';
-          await D(70);
+          await D(70,true);
         }
       }
       await D(150);
     }
     await D(350);
     // 행 순서로 읽어 평문 복원
+    let prevTd=null;
     for(let r=0;r<rows;r++){
       for(let c=0;c<cols;c++){
         const ch=gridChars[r][c];
         if(ch==='')continue;
         const td=document.getElementById(`ctd${r}_${c}`);
-        if(td&&animate)td.style.boxShadow='0 0 10px rgba(13,115,119,.45)';
+        if(prevTd)prevTd.style.boxShadow='';
+        if(td&&animate){td.style.boxShadow='0 0 10px rgba(13,115,119,.45)';prevTd=td;}
         const sp=document.createElement('span');sp.className='col-read-ch';sp.textContent=ch;readEl.appendChild(sp);
-        await D(85);sp.classList.add('lit');result+=ch;
-        if(td&&animate)colAnim.later(g,()=>{td.style.boxShadow='';},300);
+        await D(85,true);sp.classList.add('lit');result+=ch;
       }
     }
+    if(prevTd)prevTd.style.boxShadow='';
   }
 
   if(!colAnim.alive(g))throw ANIM_CANCEL;
@@ -1340,7 +1494,8 @@ function bfRun(){
     row.innerHTML=`<span class="bf-shift">shift ${s}</span><span class="bf-text">${cand}</span>`;
     row.onclick=()=>bfPick(s,row);
     list.appendChild(row);
-    setTimeout(()=>row.classList.add('show'),s*55);
+    if(reducedMotion())row.classList.add('show');
+    else setTimeout(()=>row.classList.add('show'),s*55);
   }
 }
 function bfPick(s,row){
@@ -1444,7 +1599,7 @@ function renderQuizzes(){
       return `<div class="quiz-item" data-explain="${item.ex.replace(/"/g,'&quot;')}">
         <div class="quiz-q"><span class="quiz-q-num">${qi+1}</span>${item.q}</div>
         <div class="quiz-opts">${opts}</div>
-        <div class="quiz-fb"></div>
+        <div class="quiz-fb" aria-live="polite"></div>
       </div>`;
     }).join('');
     mount.innerHTML=`<div class="quiz"><div class="quiz-hd">✅ 확인 문제</div>${items}</div>`;
@@ -1478,7 +1633,66 @@ function quizRetry(btn){
   box.querySelector('.quiz-opt')?.focus();
 }
 
+// ======================== 공통 조작부 (시저·레일 펜스·열 전치) ========================
+/* 세 탭 모두 같은 순서·이름: [모드: 암호화|복호화] [▶ 시각화] [⏸ 일시정지/▶ 재생] [⏭ 한 단계] [초기화] [속도 1×|2×] */
+const CTRL={
+  caesar:   {p:'c',  anim:()=>caesarAnim,setMode:m=>setCMode(m),   play:sp=>caesarAnimate(sp),reset:()=>caesarReset(),inputLabel:'caesarInputLabel',busy:'caesarOutput'},
+  railfence:{p:'rf', anim:()=>rfAnim,    setMode:m=>setRFMode(m),  play:sp=>rfVisualize(sp), reset:()=>rfReset(),    inputLabel:'rfInputLabel',    busy:'rfResult',purple:true},
+  columnar: {p:'col',anim:()=>colAnim,   setMode:m=>setColMode(m), play:sp=>colVisualize(sp),reset:()=>colReset(),   inputLabel:'colInputLabel',   busy:'colResult'},
+};
+function syncModeUI(tab,m){
+  const c=CTRL[tab],b1=document.getElementById(c.p+'Mode1'),b2=document.getElementById(c.p+'Mode2');
+  if(!b1)return;
+  b1.classList.toggle('active',m==='enc');b2.classList.toggle('active',m==='dec');
+  b1.setAttribute('aria-pressed',m==='enc');b2.setAttribute('aria-pressed',m==='dec');
+  document.getElementById(c.p+'Play').textContent=m==='enc'?'▶ 암호화 시각화':'▶ 복호화 시각화';
+  document.getElementById(c.inputLabel).textContent=m==='enc'?'평문 입력':'암호문 입력';
+}
+function setSpeed(tab,s){
+  const c=CTRL[tab];c.anim().setSpeed(s);
+  [1,2].forEach(n=>{const b=document.getElementById(c.p+'Spd'+n);if(b){b.classList.toggle('active',n===s);b.setAttribute('aria-pressed',n===s);}});
+}
+function buildControls(){
+  document.querySelectorAll('.ctrl-bar[data-tab]').forEach(bar=>{
+    const tab=bar.dataset.tab,c=CTRL[tab],p=c.p,pc=c.purple?' purple':'';
+    bar.setAttribute('role','toolbar');bar.setAttribute('aria-label','시각화 조작');
+    bar.innerHTML=
+      `<div class="ctrl-grp" role="group" aria-label="모드"><span class="ctrl-lbl">모드</span>`+
+      `<button type="button" class="chip active${pc}" id="${p}Mode1" aria-pressed="true">암호화</button>`+
+      `<button type="button" class="chip${pc}" id="${p}Mode2" aria-pressed="false">복호화</button></div>`+
+      `<button type="button" class="btn btn-cyan btn-sm" id="${p}Play">▶ 암호화 시각화</button>`+
+      `<button type="button" class="btn btn-ghost btn-sm" id="${p}Pause" aria-pressed="false" aria-disabled="true">⏸ 일시정지</button>`+
+      `<button type="button" class="btn btn-ghost btn-sm" id="${p}Step">⏭ 한 단계</button>`+
+      `<button type="button" class="btn btn-ghost btn-sm" id="${p}Reset">초기화</button>`+
+      `<div class="ctrl-grp" role="group" aria-label="속도"><span class="ctrl-lbl">속도</span>`+
+      `<button type="button" class="spd-btn active" id="${p}Spd1" aria-pressed="true">1×</button>`+
+      `<button type="button" class="spd-btn" id="${p}Spd2" aria-pressed="false">2×</button></div>`;
+    const $=id=>document.getElementById(p+id), anim=c.anim();
+    $('Mode1').addEventListener('click',()=>c.setMode('enc'));
+    $('Mode2').addEventListener('click',()=>c.setMode('dec'));
+    $('Play').addEventListener('click',()=>c.play(false));
+    $('Pause').addEventListener('click',()=>{ if(!anim.running)return; anim.paused?anim.resume():anim.pause(); });
+    $('Step').addEventListener('click',()=>{
+      if(reducedMotion()){c.play(false);return;}       // 움직임 줄이기: 바로 완료 상태
+      if(anim.running)anim.step(); else c.play(true);  // 멈춰 있으면 한 단계 시작
+    });
+    $('Reset').addEventListener('click',()=>c.reset());
+    $('Spd1').addEventListener('click',()=>setSpeed(tab,1));
+    $('Spd2').addEventListener('click',()=>setSpeed(tab,2));
+    anim.onState=(running,paused)=>{
+      const b=$('Pause');
+      b.setAttribute('aria-disabled',running?'false':'true');
+      b.textContent=paused&&running?'▶ 재생':'⏸ 일시정지';
+      b.setAttribute('aria-pressed',paused&&running?'true':'false');
+      const out=document.getElementById(c.busy);
+      if(out)out.setAttribute('aria-busy',running&&!paused?'true':'false');   // 진행 중엔 화면낭독기가 글자마다 읽지 않게
+    };
+  });
+}
+
 // ======================== INIT ========================
+buildControls();
+initTabs();
 buildWheel();
 caesarShiftChange(3);
 updateMapTable(3);
