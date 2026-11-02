@@ -407,6 +407,23 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .kx-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
 .kx-svg{width:220px;height:220px;flex-shrink:0}
 .kx-num{font-size:clamp(30px,6vw,54px);font-weight:900;color:var(--amber);line-height:1}
+/* C3 RSA */
+.rsa-steps{list-style:none;counter-reset:rs;display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.rsa-steps li{counter-increment:rs;font-size:14px;line-height:1.6;padding:8px 12px;background:var(--s2);border-radius:9px;border:1px solid var(--border)}
+.rsa-steps li::before{content:counter(rs);display:inline-flex;width:20px;height:20px;border-radius:6px;background:var(--plum-bg);color:var(--plum);font-size:12px;font-weight:800;align-items:center;justify-content:center;margin-right:8px}
+.rsa-steps .v{font-family:var(--mono);font-weight:800;color:var(--plum)}
+.rsa-sel{padding:8px 10px;border:1.5px solid var(--border);border-radius:9px;background:var(--s2);font-family:var(--mono);font-size:15px;color:var(--text);width:100%}
+.lb-stage{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;align-items:stretch}
+.lb-zone{border:1.5px solid var(--border);border-radius:12px;padding:10px;min-height:150px;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--s2)}
+.lb-zone h3{font-size:13px;font-weight:800;color:var(--dim)}
+.lb-zone.net{background:repeating-linear-gradient(90deg,var(--s2) 0 10px,var(--s1) 10px 20px)}
+.lb-box{font-size:15px;font-weight:800;padding:12px 14px;border-radius:12px;border:2px solid var(--amber-mid);background:var(--amber-bg);color:#92400E;cursor:pointer;font-family:inherit;min-width:110px;min-height:56px}
+.lb-box.locked{border-color:var(--plum);background:var(--plum-bg);color:var(--plum)}
+.lb-box.open{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.lb-eve{font-size:12px;color:var(--dim);text-align:center;line-height:1.5}
+.lb-keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.lb-key{padding:9px 13px;border-radius:9px;border:1.5px solid var(--border);background:var(--s1);font-size:13px;font-weight:700;color:var(--text);font-family:inherit;min-height:40px}
+@media(max-width:600px){.lb-stage{grid-template-columns:1fr}.lb-zone{min-height:0}}
 /* ====== Phase B: 키보드 포커스 표시 ====== */
 button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
 .slider:focus-visible{outline-offset:6px;border-radius:4px}
@@ -2072,9 +2089,126 @@ function buildXorLab(){
   N.addEventListener('input',draw);draw();
 }
 
+// ---------------- C3 미니 RSA + 자물쇠 상자 게임 ----------------
+function gcd(a,b){while(b){[a,b]=[b,a%b];}return a;}
+function modInv(e,m){let a=e,b=m,x0=1,x1=0;while(b){const q=Math.floor(a/b);[a,b]=[b,a-q*b];[x0,x1]=[x1,x0-q*x1];}return a===1?((x0%m)+m)%m:null;}
+function modPow(b,e,m){let r=1n,B=BigInt(b)%BigInt(m),E=BigInt(e);const M=BigInt(m);while(E>0n){if(E&1n)r=r*B%M;B=B*B%M;E>>=1n;}return r;}
+function buildRsaLab(){
+  const PR=[3,5,7,11,13,17];
+  beforeQuiz('pubkey',h(`<div class="card" id="rsaLab"><div class="card-title">🧮 미니 RSA — 작은 소수로 직접 계산해 보기</div>
+    <p class="lab-note">진짜 RSA와 <b>똑같은 계산</b>을 아주 작은 수로 해 봐요. 두 소수 p, q를 고르면 공개 키와 개인 키가 만들어져요.</p>
+    <div class="lab-row">
+      <div>${lbl('rsaP','소수 p')}<select id="rsaP" class="rsa-sel">${PR.map(p=>`<option${p===3?' selected':''}>${p}</option>`).join('')}</select></div>
+      <div>${lbl('rsaQ','소수 q')}<select id="rsaQ" class="rsa-sel">${PR.map(p=>`<option${p===11?' selected':''}>${p}</option>`).join('')}</select></div>
+      <div>${lbl('rsaE','공개 지수 e (추천값 자동)')}<select id="rsaE" class="rsa-sel"></select></div>
+      <div>${lbl('rsaM','보낼 숫자 m')}<input id="rsaM" type="number" class="inp" min="0" value="4"></div>
+    </div>
+    <div class="lab-msg" id="rsaWarn" aria-live="polite"></div>
+    <ol class="rsa-steps" id="rsaSteps" aria-live="polite"></ol>
+    <p class="lab-note" style="margin:12px 0 0">💡 실제 RSA는 p, q가 <b>수백 자리</b>라서, n만 보고 p와 q를 알아내는 소인수분해가 사실상 불가능해요. 그래서 공개 키 (n, e)를 모두에게 알려 줘도 개인 키 d는 안전해요.</p></div>`));
+  const P=document.getElementById('rsaP'),Q=document.getElementById('rsaQ'),E=document.getElementById('rsaE'),Mi=document.getElementById('rsaM');
+  const fillE=()=>{
+    const p=+P.value,q=+Q.value,phi=(p-1)*(q-1);
+    const opts=[];for(let e=3;e<phi;e++)if(gcd(e,phi)===1)opts.push(e);
+    E.innerHTML=opts.map((e,i)=>`<option value="${e}">${e}${i===0?' (추천)':''}</option>`).join('');
+  };
+  const calc=()=>{
+    let warn='';
+    if(P.value===Q.value){const alt=PR.find(x=>x!==+P.value);Q.value=String(alt);fillE();warn='p와 q는 서로 다른 소수여야 해요. q를 바꿔 두었어요.';}
+    const p=+P.value,q=+Q.value,n=p*q,phi=(p-1)*(q-1),e=+E.value,d=modInv(e,phi);
+    let m=Math.floor(+Mi.value);
+    if(!Number.isFinite(m)||m<0){m=0;}
+    if(m>=n){m=n-1;warn=(warn?warn+' ':'')+`m은 n(=${n})보다 작아야 해요. ${m}(으)로 바꿨어요.`;}
+    if(String(m)!==Mi.value)Mi.value=m;
+    setMsg('rsaWarn',warn?'no':'',warn);
+    const c=modPow(m,e,n),back=modPow(c,d,n);
+    const big=BigInt(m)**BigInt(e),bigS=big.toString().length<=24?big.toString():'(아주 큰 수)';
+    document.getElementById('rsaSteps').innerHTML=`
+      <li>n = p × q = ${p} × ${q} = <span class="v" id="rsaN">${n}</span></li>
+      <li>φ(n) = (p−1)(q−1) = ${p-1} × ${q-1} = <span class="v" id="rsaPhi">${phi}</span></li>
+      <li>e = <span class="v" id="rsaEv">${e}</span> — φ(n)과 <b>서로소</b>(공약수가 1뿐)인 수 중에서 골라요</li>
+      <li>d = <span class="v" id="rsaD">${d}</span> — e × d를 φ(n)으로 나눈 나머지가 1 (${e} × ${d} = ${e*d} = ${Math.floor(e*d/phi)} × ${phi} + 1)</li>
+      <li>🔓 공개 키 (n, e) = (${n}, ${e}) · 🗝️ 개인 키 (n, d) = (${n}, ${d})</li>
+      <li>🔒 암호화: c = m<sup>e</sup> mod n = ${m}<sup>${e}</sup> mod ${n} = ${bigS} mod ${n} = <span class="v" id="rsaC">${c}</span></li>
+      <li>🔓 복호화: m = c<sup>d</sup> mod n = ${c}<sup>${d}</sup> mod ${n} = <span class="v" id="rsaBack">${back}</span> ${back===BigInt(m)?'✅ 원래 숫자로 돌아왔어요!':''}</li>`;
+  };
+  P.addEventListener('change',()=>{fillE();calc();});Q.addEventListener('change',()=>{fillE();calc();});
+  E.addEventListener('change',calc);Mi.addEventListener('input',calc);
+  fillE();calc();
+
+  // 자물쇠 상자 게임
+  const LETTER='내일 3시 도서관에서 만나';
+  beforeQuiz('pubkey',h(`<div class="card" id="lockGame"><div class="card-title">📦 자물쇠 상자 게임 — Alice가 Bob에게 비밀 편지 보내기</div>
+    <p class="lab-note">키 카드를 상자로 <b>끌어다 놓거나</b>, 키를 <b>누른 다음 상자를 누르세요</b>. (키보드: 키에서 Enter → 상자에서 Enter)</p>
+    <div class="lb-stage">
+      <div class="lb-zone" id="lbAlice"><h3>👩 Alice</h3></div>
+      <div class="lb-zone net" id="lbNet"><h3>🌐 네트워크</h3><div class="lb-eve" id="lbEve">😈 Eve가 엿보는 중…<br>아직 지나간 상자가 없어요.</div></div>
+      <div class="lb-zone" id="lbBob"><h3>👨 Bob</h3></div>
+    </div>
+    <div class="lb-keys" id="lbKeys">
+      <button type="button" class="lb-key" data-key="bobPub" aria-pressed="false">🔓 Bob 공개 키</button>
+      <button type="button" class="lb-key" data-key="bobPriv" aria-pressed="false">🗝️ Bob 개인 키</button>
+      <button type="button" class="lb-key" data-key="alicePriv" aria-pressed="false">🗝️ Alice 개인 키</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn btn-cyan btn-sm" id="lbSend">📨 상자 보내기</button><button type="button" class="btn btn-ghost btn-sm" id="lbReset">처음부터</button></div>
+    <div class="lab-msg" id="lbMsg" aria-live="polite"></div></div>`));
+  const box=h(`<button type="button" class="lb-box" id="lbBox" data-drop="box"></button>`);
+  let at='alice',lock=null,opened=false,leaked=false,sel=null,moving=false;
+  const KEYNAME={bobPub:'Bob 공개 키',bobPriv:'Bob 개인 키',alicePriv:'Alice 개인 키'};
+  const paint=()=>{
+    document.getElementById(at==='alice'?'lbAlice':at==='net'?'lbNet':'lbBob').appendChild(box);
+    box.className='lb-box'+(opened?' open':lock?' locked':'');
+    box.innerHTML=opened?`💌 편지<br><small>"${LETTER}"</small>`:lock?`🔒 잠긴 상자<br><small>${KEYNAME[lock]}로 잠금</small>`:`📦 편지 상자<br><small>열려 있음</small>`;
+    box.setAttribute('aria-label',(opened?'열린 편지':lock?'잠긴 상자':'열린 편지 상자')+` — 지금 ${at==='alice'?'Alice':at==='net'?'네트워크':'Bob'}에게 있어요. 고른 키를 쓰려면 누르세요`);
+    document.querySelectorAll('#lbKeys .lb-key').forEach(k=>{const on=k.dataset.key===sel;k.classList.toggle('sel-key',on);k.setAttribute('aria-pressed',on);});
+  };
+  const apply=k=>{
+    sel=null;
+    if(moving){paint();return;}
+    if(at==='alice'){
+      if(lock)setMsg('lbMsg','',`이미 잠겼어요. 이제 <b>📨 상자 보내기</b>를 누르세요.`);
+      else if(k==='bobPub'){lock='bobPub';setMsg('lbMsg','ok',`🔒 잠겼어요! 이 상자는 이제 <b>Bob 개인 키로만</b> 열려요. <b>📨 상자 보내기</b>를 누르세요.`);}
+      else if(k==='bobPriv')setMsg('lbMsg','no',`❌ Bob 개인 키는 <b>Bob만</b> 가진 비밀 키예요. Alice에게는 없어요! 잠글 때는 누구나 받을 수 있는 <b>Bob의 공개 키</b>를 써요.`);
+      else setMsg('lbMsg','no',`❌ Alice 개인 키로 잠그면 Alice 공개 키로 <b>누구나</b> 열 수 있어요 — 비밀 편지가 아니라 '서명'이 돼요. Bob만 열게 하려면 <b>Bob의 공개 키</b>로 잠가야 해요.`);
+    } else if(at==='bob'){
+      if(opened)setMsg('lbMsg','ok','이미 열었어요! 🎉');
+      else if(!lock)setMsg('lbMsg','no','이 상자는 잠겨 있지 않았어요. 처음부터 다시 해 보세요.');
+      else if(k==='bobPriv'){opened=true;setMsg('lbMsg','ok',`🎉 열렸어요! 편지: "${LETTER}". 네트워크의 Eve는 잠긴 상자만 봤을 뿐, 내용을 몰라요. 미션 성공!`);}
+      else if(k==='bobPub')setMsg('lbMsg','no','❌ 공개 키로는 <b>잠글 수만</b> 있어요. 열려면 짝이 되는 <b>Bob 개인 키</b>가 필요해요.');
+      else setMsg('lbMsg','no','❌ 이 상자는 Bob 공개 키로 잠겼어요. 짝이 맞는 <b>Bob 개인 키</b>로만 열려요.');
+    }
+    paint();
+  };
+  const send=()=>{
+    if(at!=='alice'||moving){setMsg('lbMsg','',at==='bob'?'상자는 이미 Bob에게 도착했어요.':'');return;}
+    const eve=document.getElementById('lbEve');
+    const arrive=()=>{
+      moving=false;at='bob';
+      if(lock){eve.innerHTML='😈 Eve가 본 것: <b>🔒 잠긴 상자</b><br>열 키가 없어서 내용을 몰라요.';setMsg('lbMsg','ok','📬 Bob이 상자를 받았어요. 이제 <b>Bob의 키</b>로 열어 보세요.');}
+      else{leaked=true;eve.innerHTML=`😈 Eve: "편지 다 봤지롱!"<br><b>"${LETTER}"</b>`;setMsg('lbMsg','no','⚠️ 잠그지 않고 보내서 네트워크 중간의 Eve가 편지를 그대로 읽었어요! <b>처음부터</b>를 눌러 다시 해 보세요.');}
+      paint();
+    };
+    moving=true;at='net';paint();
+    if(reducedMotion())arrive();else setTimeout(arrive,700);
+  };
+  const reset=()=>{at='alice';lock=null;opened=false;leaked=false;sel=null;moving=false;
+    document.getElementById('lbEve').innerHTML='😈 Eve가 엿보는 중…<br>아직 지나간 상자가 없어요.';
+    setMsg('lbMsg','','① 먼저 알맞은 키로 상자를 잠가 보세요.');paint();};
+  document.querySelectorAll('#lbKeys .lb-key').forEach(k=>{
+    k.addEventListener('click',()=>{if(k._noClick)return;sel=sel===k.dataset.key?null:k.dataset.key;paint();
+      if(sel)setMsg('lbMsg','',`🔑 ${KEYNAME[sel]}를 골랐어요. 이제 상자를 누르세요.`);});
+    enableDrag(k,t=>{if(t===box)apply(k.dataset.key);});
+  });
+  box.addEventListener('click',()=>{if(!sel){setMsg('lbMsg','','먼저 아래에서 키를 고르세요.');return;}apply(sel);});
+  document.getElementById('lbSend').addEventListener('click',send);
+  document.getElementById('lbReset').addEventListener('click',reset);
+  reset();
+}
+
 function initPhaseC(){
   if(FEATURES.progress){buildProgress();buildMissionPuzzles();}
   if(FEATURES.xorLab)buildXorLab();
+  if(FEATURES.rsaLab)buildRsaLab();
 }
 
 // ======================== INIT ========================
