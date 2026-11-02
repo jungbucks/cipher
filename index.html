@@ -389,6 +389,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .kw-card .ord{position:absolute;top:-8px;right:-8px;background:var(--teal);color:#fff;border-radius:999px;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
 .kw-card.picked{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
 
+/* C2 XOR 실험실 */
+.xor-grid{display:flex;flex-wrap:wrap;gap:8px}
+.xcol{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border:1px solid var(--border);border-radius:10px;background:var(--s2);font-family:var(--mono);font-size:12px;min-width:78px}
+.xcol .xch{font-size:16px;font-weight:800;color:var(--text)}
+.xcol .xop{font-size:12px;font-weight:700;color:var(--amber)}
+.xcol .xbits{letter-spacing:.06em;color:var(--dim)}
+.xcol .xbits.key{color:var(--amber)}
+.xcol .xline{width:100%;border-top:1.5px solid var(--dim2);margin:2px 0}
+.xcol .xbits.out{color:var(--text);font-weight:700}
+.xcol .xbits.out b{color:var(--rose);background:var(--rose-bg);border-radius:2px}
+.xcol .xhex{font-weight:800;color:var(--plum)}
+.xor-out{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:.08em}
+.xor-out .xr{display:inline-block;min-width:1ch;transition:color .3s}
+.xor-out .xr.back{color:var(--green)}
+.xor-out .xr.bad{color:var(--rose)}
+.kx-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.kx-svg{width:220px;height:220px;flex-shrink:0}
+.kx-num{font-size:clamp(30px,6vw,54px);font-weight:900;color:var(--amber);line-height:1}
 /* ====== Phase B: 키보드 포커스 표시 ====== */
 button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
 .slider:focus-visible{outline-offset:6px;border-radius:4px}
@@ -1971,8 +1989,92 @@ function buildMissionPuzzles(){
   document.getElementById('hzNew').addEventListener('click',hzNew);hzNew();
 }
 
+// ---------------- C2 대칭 키 XOR 실험실 + 키 개수 폭발 ----------------
+function buildXorLab(){
+  beforeQuiz('symmetric',h(`<div class="card" id="xorLab"><div class="card-title">🧪 XOR 실험실 — 비트로 보는 대칭 키</div>
+    <p class="lab-note">컴퓨터는 글자를 <b>8비트(0과 1 여덟 개)</b>로 저장해요. 대칭 키 암호의 기본 재료인 <b>XOR(⊕)</b>은 두 비트가 <b>같으면 0, 다르면 1</b>이에요. 같은 키로 한 번 더 XOR 하면 원래대로 돌아와요!</p>
+    <div class="lab-row"><div>${lbl('xorText','평문 (영문 최대 8자)')}<input id="xorText" class="inp" maxlength="8" value="HELLO" autocomplete="off"></div>
+      <div>${lbl('xorKey','키 (1~8자, 짧으면 반복)')}<input id="xorKey" class="inp" maxlength="8" value="KEY" autocomplete="off"></div></div>
+    <div class="inp-note" id="xorNote" style="margin:-4px 0 10px"></div>
+    <div class="xor-grid" id="xorGrid" aria-label="글자별 비트 계산"></div>
+    <div class="lab-note" style="margin:8px 0 0">분홍색 비트 = 키의 1 때문에 <b>뒤집힌</b> 비트</div>
+    <div class="result-row"><span class="result-label">암호문(16진수)</span><span class="result-text mono" id="xorHex" style="color:var(--plum)"></span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button type="button" class="btn btn-cyan btn-sm" id="xorSame">🔓 같은 키로 복호화</button><button type="button" class="btn btn-ghost btn-sm" id="xorWrong">🔑 다른 키로 복호화</button></div>
+    <div class="xor-out" id="xorOut" style="margin-top:10px"></div>
+    <div class="lab-msg" id="xorMsg" aria-live="polite"></div></div>`));
+  const T=document.getElementById('xorText'),K=document.getElementById('xorKey');
+  const ascii=s=>[...s].filter(c=>{const n=c.charCodeAt(0);return n>=32&&n<127;}).join('').slice(0,8);
+  const bits=n=>n.toString(2).padStart(8,'0'),hx=n=>n.toString(16).toUpperCase().padStart(2,'0');
+  const printable=n=>n>=33&&n<127?String.fromCharCode(n):'·';
+  let seq=0;
+  const state=()=>({t:ascii(T.value),k:ascii(K.value)});
+  const render=()=>{
+    seq++;
+    const {t,k}=state();
+    const note=document.getElementById('xorNote');
+    note.textContent=(T.value!==t||K.value!==k)?'⚠️ 영문·숫자·기호만 쓸 수 있어요(한글은 빠져요).':(!k?'⚠️ 키를 1자 이상 넣어 주세요.':'');
+    note.classList.toggle('show',!!note.textContent);
+    document.getElementById('xorOut').innerHTML='';setMsg('xorMsg','','');
+    if(!t||!k){document.getElementById('xorGrid').innerHTML='';document.getElementById('xorHex').textContent='';return;}
+    document.getElementById('xorGrid').innerHTML=[...t].map((ch,i)=>{
+      const p=ch.charCodeAt(0),kc=k[i%k.length],kv=kc.charCodeAt(0),c=p^kv,kb=bits(kv);
+      const out=[...bits(c)].map((b,j)=>kb[j]==='1'?`<b>${b}</b>`:b).join('');
+      return `<div class="xcol"><div class="xch">${esc(ch===' '?'␣':ch)}</div><div class="xbits">${bits(p)}</div><div class="xop">⊕ ${esc(kc===' '?'␣':kc)}</div><div class="xbits key">${kb}</div><div class="xline"></div><div class="xbits out">${out}</div><div class="xhex">${hx(c)}</div></div>`;
+    }).join('');
+    document.getElementById('xorHex').textContent=[...t].map((ch,i)=>hx(ch.charCodeAt(0)^k.charCodeAt(i%k.length))).join(' ');
+  };
+  const decrypt=same=>{
+    const {t,k}=state();if(!t||!k)return;
+    const my=++seq;
+    const k2=same?k:[...k].map(c=>String.fromCharCode(c.charCodeAt(0)>=126?33:c.charCodeAt(0)+1)).join('');
+    const cb=[...t].map((ch,i)=>ch.charCodeAt(0)^k.charCodeAt(i%k.length));
+    const res=cb.map((c,i)=>c^k2.charCodeAt(i%k2.length));
+    const out=document.getElementById('xorOut');
+    out.dataset.result=res.map(printable).join('');
+    out.innerHTML=cb.map(c=>`<span class="xr">${hx(c)}</span>`).join(' ');
+    setMsg('xorMsg','',same?`🔓 같은 키 "${esc(k)}"로 한 번 더 XOR 하는 중…`:`🔑 다른 키 "${esc(k2)}"로 XOR 하는 중…`);
+    const spans=[...out.querySelectorAll('.xr')],step=reducedMotion()?0:260;
+    spans.forEach((sp,i)=>setTimeout(()=>{
+      if(my!==seq)return;
+      sp.textContent=same?(t[i]===' '?'␣':t[i]):printable(res[i]);sp.classList.add(same?'back':'bad');
+      if(i===spans.length-1){
+        if(same)setMsg('xorMsg','ok',`✅ 원문 "${esc(t)}"이(가) 그대로 돌아왔어요! (평문 ⊕ 키 ⊕ 키 = 평문)`);
+        else setMsg('xorMsg','no',`❌ 깨진 결과가 나왔어요. 키가 한 글자씩만 달라도 원문을 볼 수 없어요. (· = 화면에 못 보여 주는 글자)`);
+      }
+    },(i+1)*step));
+  };
+  T.addEventListener('input',render);K.addEventListener('input',render);
+  document.getElementById('xorSame').addEventListener('click',()=>decrypt(true));
+  document.getElementById('xorWrong').addEventListener('click',()=>decrypt(false));
+  render();
+
+  // 키 개수 폭발 시뮬레이터
+  beforeQuiz('symmetric',h(`<div class="card" id="keyBoom"><div class="card-title">💥 키 개수 폭발 시뮬레이터</div>
+    <p class="lab-note">대칭 키는 <b>두 사람마다 키가 하나씩</b> 따로 필요해요. 사람이 늘어나면 키는 얼마나 늘어날까요?</p>
+    <div class="label-row"><label class="lbl" for="kxN">사람 수 n</label><span class="lbl-val" id="kxNVal">10</span></div>
+    <input id="kxN" type="range" min="2" max="30" value="10" class="slider">
+    <div class="kx-wrap"><svg class="kx-svg" id="kxSvg" viewBox="0 0 220 220" role="img"></svg>
+      <div><div class="lab-note" style="margin:0">필요한 대칭 키 개수</div><div class="kx-num" id="kxNum" aria-live="polite">45</div>
+      <div class="lab-note mono" id="kxFormula" style="margin:6px 0 4px"></div><div class="lab-note" id="kxPub" style="margin:0"></div></div></div></div>`));
+  const N=document.getElementById('kxN');
+  const draw=()=>{
+    const n=+N.value,k=n*(n-1)/2,cx=110,cy=110,r=96;
+    const pts=[...Array(n)].map((_,i)=>{const a=i/n*Math.PI*2-Math.PI/2;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+    let lines='';for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)lines+=`M${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}L${pts[j][0].toFixed(1)} ${pts[j][1].toFixed(1)}`;
+    const svg=document.getElementById('kxSvg');
+    svg.innerHTML=`<path d="${lines}" style="stroke:rgba(194,119,10,.38);stroke-width:${n>20?.5:.9};fill:none"/>`+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5" style="fill:var(--plum)"/>`).join('');
+    svg.setAttribute('aria-label',`사람 ${n}명을 서로 잇는 선 ${k}개`);
+    document.getElementById('kxNVal').textContent=n;
+    document.getElementById('kxNum').textContent=`${k}개`;
+    document.getElementById('kxFormula').textContent=`n(n−1)÷2 = ${n} × ${n-1} ÷ 2 = ${k}`;
+    document.getElementById('kxPub').innerHTML=`공개 키 방식이면 한 사람당 키 한 쌍(공개 키 + 개인 키) → <b>${2*n}개</b>면 충분해요.`;
+  };
+  N.addEventListener('input',draw);draw();
+}
+
 function initPhaseC(){
   if(FEATURES.progress){buildProgress();buildMissionPuzzles();}
+  if(FEATURES.xorLab)buildXorLab();
 }
 
 // ======================== INIT ========================
