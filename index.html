@@ -459,6 +459,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .kc-row{position:relative;height:48px;margin:4px 0 8px}
 .kc{position:absolute;top:0;width:40px;height:40px;border-radius:9px;border:1.5px solid var(--amber-mid);background:var(--amber-bg);color:#92400E;font-family:var(--mono);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;transition:transform .7s cubic-bezier(.4,.1,.2,1)}
 .kc small{position:absolute;top:-7px;right:-7px;background:var(--teal);color:#fff;border-radius:999px;font-size:10px;width:17px;height:17px;display:flex;align-items:center;justify-content:center}
+/* C6 쪽지 */
+.note-card{border:1.5px solid rgba(109,40,217,.3);background:linear-gradient(135deg,var(--plum-bg) 0%,var(--s1) 100%)}
+.qr-box{display:flex;justify-content:center;margin:12px 0}
+.qr-box svg{width:200px;height:200px;background:#fff;border-radius:8px}
+.share-link{width:100%;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--s2);color:var(--text)}
+
 /* ====== Phase B: 키보드 포커스 표시 ====== */
 button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
 .slider:focus-visible{outline-offset:6px;border-radius:4px}
@@ -2422,12 +2428,146 @@ function renderKeyCards(key,force){
   if(reducedMotion())go();else{row.offsetWidth;setTimeout(go,350);}
 }
 
+// ---------------- C6 암호 쪽지 공유 (+ 외부 라이브러리 없는 QR 코드) ----------------
+/* QR 코드 인코더(바이트 모드·오류정정 M·버전 1~10). 공개 명세(ISO/IEC 18004)의 표준 알고리즘을 그대로 구현. */
+const QR=(()=>{
+  const ECC=[0,10,16,26,18,24,16,18,22,22,26],BLK=[0,1,1,1,2,2,4,4,4,5,5];
+  const raw=v=>{let r=(16*v+128)*v+64;if(v>=2){const n=Math.floor(v/7)+2;r-=(25*n-10)*n-55;if(v>=7)r-=36;}return r;};
+  const dataCw=v=>Math.floor(raw(v)/8)-ECC[v]*BLK[v];
+  const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x;}return z;};
+  const divisor=d=>{const r=Array(d).fill(0);r[d-1]=1;let root=1;for(let i=0;i<d;i++){for(let j=0;j<d;j++){r[j]=mul(r[j],root);if(j+1<d)r[j]^=r[j+1];}root=mul(root,2);}return r;};
+  const remainder=(data,dv)=>{const r=Array(dv.length).fill(0);for(const b of data){const f=b^r.shift();r.push(0);dv.forEach((c,i)=>{r[i]^=mul(c,f);});}return r;};
+  const align=(v,size)=>{if(v===1)return[];const n=Math.floor(v/7)+2,step=Math.ceil((v*4+4)/(n*2-2))*2,res=[6];for(let p=size-7;res.length<n;p-=step)res.splice(1,0,p);return res;};
+  const MASK=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+  const penalty=(M,n)=>{let p=0;
+    for(let a=0;a<n;a++){let rr=1,rc=1;for(let b=1;b<n;b++){
+      if(M[a][b]===M[a][b-1]){rr++;if(rr===5)p+=3;else if(rr>5)p++;}else rr=1;
+      if(M[b][a]===M[b-1][a]){rc++;if(rc===5)p+=3;else if(rc>5)p++;}else rc=1;}}
+    for(let y=0;y<n-1;y++)for(let x=0;x<n-1;x++){const c=M[y][x];if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1])p+=3;}
+    const P1=[1,0,1,1,1,0,1,0,0,0,0],P2=[0,0,0,0,1,0,1,1,1,0,1];
+    const chk=g=>{for(let i=0;i+11<=n;i++){let a=true,b=true;for(let k=0;k<11;k++){const v=g(i+k)?1:0;if(v!==P1[k])a=false;if(v!==P2[k])b=false;}if(a)p+=40;if(b)p+=40;}};
+    for(let a=0;a<n;a++){chk(i=>M[a][i]);chk(i=>M[i][a]);}
+    let dark=0;for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(M[y][x])dark++;
+    return p+Math.floor(Math.abs(dark*20-n*n*10)/(n*n))*10;};
+  function encode(text){
+    const bytes=[...new TextEncoder().encode(text)];
+    let v=1;for(;v<=10;v++)if(4+(v<10?8:16)+bytes.length*8<=dataCw(v)*8)break;
+    if(v>10)return null;
+    const cap=dataCw(v)*8,bits=[],put=(val,n)=>{for(let i=n-1;i>=0;i--)bits.push((val>>>i)&1);};
+    put(4,4);put(bytes.length,v<10?8:16);bytes.forEach(b=>put(b,8));
+    put(0,Math.min(4,cap-bits.length));put(0,(8-bits.length%8)%8);
+    for(let pad=0xEC;bits.length<cap;pad^=0xEC^0x11)put(pad,8);
+    const data=[];for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];data.push(b);}
+    const nb=BLK[v],ec=ECC[v],rawCw=Math.floor(raw(v)/8),nShort=nb-rawCw%nb,shortLen=Math.floor(rawCw/nb),dv=divisor(ec),blocks=[];
+    for(let i=0,k=0;i<nb;i++){const dat=data.slice(k,k+shortLen-ec+(i<nShort?0:1));k+=dat.length;const e=remainder(dat,dv);if(i<nShort)dat.push(0);blocks.push(dat.concat(e));}
+    const cw=[];for(let i=0;i<blocks[0].length;i++)blocks.forEach((b,j)=>{if(i!==shortLen-ec||j>=nShort)cw.push(b[i]);});
+    const size=v*4+17,M=[...Array(size)].map(()=>Array(size).fill(false)),F=[...Array(size)].map(()=>Array(size).fill(false));
+    const setF=(x,y,d)=>{M[y][x]=d;F[y][x]=true;};
+    for(let i=0;i<size;i++){setF(6,i,i%2===0);setF(i,6,i%2===0);}
+    const finder=(x,y)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),xx=x+dx,yy=y+dy;if(xx>=0&&xx<size&&yy>=0&&yy<size)setF(xx,yy,d!==2&&d!==4);}};
+    finder(3,3);finder(size-4,3);finder(3,size-4);
+    const ap=align(v,size),na=ap.length;
+    for(let i=0;i<na;i++)for(let j=0;j<na;j++){if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0))continue;
+      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)setF(ap[i]+dx,ap[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1);}
+    const format=mask=>{const d=(0<<3)|mask;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=((d<<10)|r)^0x5412,g=i=>((b>>>i)&1)===1;   // 0 = 오류정정 M
+      for(let i=0;i<=5;i++)setF(8,i,g(i));setF(8,7,g(6));setF(8,8,g(7));setF(7,8,g(8));for(let i=9;i<15;i++)setF(14-i,8,g(i));
+      for(let i=0;i<8;i++)setF(size-1-i,8,g(i));for(let i=8;i<15;i++)setF(8,size-15+i,g(i));setF(8,size-8,true);};
+    format(0);
+    if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=(v<<12)|r;for(let i=0;i<18;i++){const bit=((b>>>i)&1)===1,a=size-11+i%3,c=Math.floor(i/3);setF(a,c,bit);setF(c,a,bit);}}
+    let bi=0;
+    for(let right=size-1;right>=1;right-=2){if(right===6)right=5;
+      for(let vert=0;vert<size;vert++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)===0,y=up?size-1-vert:vert;
+        if(!F[y][x]&&bi<cw.length*8){M[y][x]=((cw[bi>>>3]>>>(7-(bi&7)))&1)===1;bi++;}}}
+    const apply=m=>{for(let y=0;y<size;y++)for(let x=0;x<size;x++)if(!F[y][x]&&MASK[m](x,y))M[y][x]=!M[y][x];};
+    let best=0,bestP=Infinity;
+    for(let m=0;m<8;m++){apply(m);format(m);const p=penalty(M,size);if(p<bestP){bestP=p;best=m;}apply(m);}
+    apply(best);format(best);
+    return M;
+  }
+  function svg(text){
+    const M=encode(text);if(!M)return null;
+    const n=M.length,q=4;let d='';
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(M[y][x])d+=`M${x+q} ${y+q}h1v1h-1z`;
+    return `<svg viewBox="0 0 ${n+2*q} ${n+2*q}" role="img" aria-label="쪽지 링크 QR 코드" shape-rendering="crispEdges"><rect width="${n+2*q}" height="${n+2*q}" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+  }
+  return {encode,svg};
+})();
+const NOTE_TYPES={caesar:'시저 암호',railfence:'레일 펜스',columnar:'열 전치'};
+function currentNote(tab){
+  if(tab==='caesar'){const s=clean(document.getElementById('caesarInput').value).trim();
+    return caesarMode==='enc'?caesarEncode(s,+document.getElementById('shiftSlider').value,true):s;}
+  if(tab==='railfence'){const t=document.getElementById('rfInput').value.toUpperCase().replace(/[^A-Z]/g,'');
+    return rfMode==='enc'?rfEncrypt(t,+document.getElementById('rfRails').value):t;}
+  const t=document.getElementById('colInput').value.toUpperCase().replace(/[^A-Z]/g,'');
+  if(colMode==='dec')return t;
+  if(colLevel==='adv'){const k=document.getElementById('colKey').value.toUpperCase().replace(/[^A-Z]/g,'')||'ZEBRA';return colEncrypt(t,k);}
+  return basicEncrypt(t,+document.getElementById('colColsSlider').value||5);
+}
+function shareUrl(tab,note){
+  const base=location.href.split(/[?#]/)[0];
+  return `${base}?${new URLSearchParams({note,type:tab}).toString()}#${tab}`;
+}
+function openShare(tab){
+  let note=currentNote(tab).replace(/\s+/g,' ').trim();
+  if(!note){openModal(`<h2>📩 쪽지로 공유</h2><p class="lab-note">먼저 입력칸에 글자를 넣어 암호문을 만들어 보세요.</p><div style="text-align:right"><button type="button" class="btn btn-ghost btn-sm" data-close>닫기</button></div>`);return;}
+  let cut='';if(note.length>100){note=note.slice(0,100);cut='<br>⚠️ 너무 길어서 앞 100글자만 담았어요.';}
+  const url=shareUrl(tab,note),qr=QR.svg(url);
+  const m=openModal(`<h2>📩 ${NOTE_TYPES[tab]} 쪽지 공유</h2>
+    <p class="lab-note">링크에는 <b>암호문과 암호 종류만</b> 들어가요. 키(이동 칸 수·레일 수·열 수/키워드)는 넣지 않았으니, 친구에게 <b>따로</b> 알려 주거나 스스로 풀게 해 보세요!${cut}</p>
+    <div class="ci-locked" style="margin-bottom:10px">🔒 <span class="mono" id="shareNoteText">${esc(note)}</span></div>
+    <input class="share-link" id="shareLink" readonly value="${esc(url)}" aria-label="공유 링크">
+    <div class="qr-box" id="shareQr">${qr||'<p class="lab-note">QR 코드를 만들 수 없을 만큼 길어요. 링크를 복사해 주세요.</p>'}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button type="button" class="btn btn-cyan btn-sm" id="shareCopy">🔗 링크 복사</button><button type="button" class="btn btn-ghost btn-sm" data-close>닫기</button></div>
+    <div class="lab-msg" id="shareMsg" aria-live="polite"></div>`);
+  m.el.querySelector('#shareCopy').addEventListener('click',()=>{
+    const inp=m.el.querySelector('#shareLink');inp.select();
+    const done=()=>setMsg('shareMsg','ok','링크를 복사했어요! 친구에게 보내 보세요.');
+    if(navigator.clipboard)navigator.clipboard.writeText(url).then(done,()=>{try{document.execCommand('copy');done();}catch(e){}});
+    else{try{document.execCommand('copy');done();}catch(e){}}
+  });
+}
+function buildShareButtons(){
+  const mk=tab=>{const b=h(`<button type="button" class="copy-mini" data-share="${tab}">📩 쪽지로 공유</button>`);b.addEventListener('click',()=>openShare(tab));return b;};
+  document.querySelector('.bench-result .copy-mini').after(mk('caesar'));
+  document.querySelector('.bench-result .copy-mini').parentNode.style.gap='6px';
+  const cBtn=document.querySelector('.bench-result [data-share]');cBtn.parentNode.insertBefore(cBtn,cBtn.previousElementSibling);  // [쪽지로 공유][복사] 순서로 오른쪽에
+  cBtn.style.marginLeft='auto';
+  document.getElementById('rfResult').parentNode.appendChild(mk('railfence'));
+  document.getElementById('colResult').parentNode.appendChild(mk('columnar'));
+}
+function readIncomingNote(){
+  let q;try{q=new URLSearchParams(location.search);}catch(e){return null;}
+  const type=q.get('type'),raw=q.get('note');
+  if(!raw||!NOTE_TYPES[type])return null;
+  const note=raw.toUpperCase().replace(/[^A-Z ]/g,'').replace(/\s+/g,' ').trim().slice(0,100);
+  return note?{type,note}:null;
+}
+function showIncomingNote(n){
+  const TIP={caesar:'휠의 <b>안쪽 고리를 돌리거나</b> 이동 칸 수 슬라이더를 움직여서, 결과가 말이 되는 영어 문장이 될 때까지 찾아보세요!',
+    railfence:'레일 수를 바꿔 가며 결과가 말이 되는 문장이 되는지 보세요.',columnar:'열 수(기초)나 키워드(심화)를 바꿔 가며 풀어 보세요.'};
+  showPage(n.type);
+  const card=h(`<div class="card note-card" id="noteCard" role="region" aria-label="친구가 보낸 쪽지"><div class="card-title">📩 친구가 보낸 쪽지를 풀어보세요</div>
+    <div class="ci-locked" style="margin-bottom:10px">🔒 <span class="mono" id="noteText">${esc(n.note)}</span></div>
+    <p class="lab-note" style="margin:0">쪽지를 아래 <b>복호화</b> 칸에 넣어 두었어요. ${TIP[n.type]}</p>
+    <div style="margin-top:10px;display:flex;gap:8px"><button type="button" class="copy-mini" id="noteLoad">쪽지 다시 넣기</button><button type="button" class="copy-mini" id="noteClose">닫기</button></div></div>`);
+  document.querySelector(`#page-${n.type} .cipher-hd`).after(card);
+  const load=()=>{
+    if(n.type==='caesar'){setCMode('dec');document.getElementById('caesarInput').value=n.note;latinNote('caesarInput','caesarNote');caesarLive();}
+    else if(n.type==='railfence'){setRFMode('dec');document.getElementById('rfInput').value=n.note.replace(/ /g,'');rfDraw(false);}
+    else{setColMode('dec');document.getElementById('colInput').value=n.note.replace(/ /g,'');colDraw(false);}
+  };
+  document.getElementById('noteLoad').addEventListener('click',load);
+  document.getElementById('noteClose').addEventListener('click',()=>card.remove());
+  load();
+}
+
 function initPhaseC(){
   if(FEATURES.handsOn)buildHandsOn();
   if(FEATURES.progress){buildProgress();buildMissionPuzzles();}
   if(FEATURES.xorLab)buildXorLab();
   if(FEATURES.rsaLab)buildRsaLab();
   if(FEATURES.hashLab)buildHashLab();
+  if(FEATURES.shareNote){buildShareButtons();const n=readIncomingNote();if(n)showIncomingNote(n);}
 }
 
 // ======================== INIT ========================
