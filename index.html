@@ -315,7 +315,27 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @media(max-width:600px){
   .card{padding:18px 16px}
   .rf-grid{gap:2px;padding:12px 8px}
-  .output-area{min-height:56px!important}
+  .output-area{min-height:48px!important}
+}
+
+/* ====== Phase B-2: 첫 화면에 휠·슬라이더·결과가 다 보이도록 머리말·여백 압축 ====== */
+.site-header{padding:28px 24px 18px}
+.site-header::after{margin-top:18px}
+.page{padding-top:24px}
+.cipher-hd{margin-bottom:18px}
+@media(min-width:900px){
+  #wheelSvg{width:270px}
+  .bench-result .output-area{min-height:52px!important}
+}
+@media(max-width:600px){
+  .site-header{padding:18px 16px 10px}
+  .site-header::after{margin-top:12px}
+  .site-eyebrow{margin-bottom:8px}
+  .site-title{margin-bottom:6px}
+  .page{padding-top:14px}
+  .cipher-hd{margin-bottom:14px}
+  .cipher-tag{margin-bottom:8px}
+  .caesar-bench{gap:10px}
 }
 
 /* ====== Phase B: 키보드 포커스 표시 ====== */
@@ -357,7 +377,7 @@ button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid v
 
   <div>
       <div class="card caesar-bench">
-        <div class="card-title bench-title">알파벳 휠 — <span class="only-wide">오른쪽</span><span class="only-narrow">바로 아래</span> 슬라이더를 움직이면 안쪽 고리가 돌아가요</div>
+        <div class="card-title bench-title">알파벳 휠 — <span class="only-wide">오른쪽</span><span class="only-narrow">아래</span> 슬라이더를 움직이면 안쪽 고리가 돌아가요</div>
         <div class="wheel-wrap bench-wheel">
           <svg id="wheelSvg" width="300" height="300" viewBox="0 0 300 300" role="img" aria-label="알파벳 휠">
             <circle cx="150" cy="150" r="148" fill="none" stroke="var(--border)" stroke-width="1"/>
