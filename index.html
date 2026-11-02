@@ -338,6 +338,57 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .caesar-bench{gap:10px}
 }
 
+/* ====== Phase C: 공통 ====== */
+.lab-note{font-size:13px;color:var(--dim);line-height:1.65;margin-bottom:12px}
+.lab-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:12px}
+.lab-row>div{flex:1;min-width:140px}
+.lab-msg{font-size:13px;line-height:1.6;padding:10px 13px;border-radius:9px;margin-top:10px;background:var(--s2);border:1px solid var(--border);color:var(--dim)}
+.lab-msg.ok{background:var(--green-bg);color:#166534;border-color:rgba(21,128,61,.2)}
+.lab-msg.no{background:rgba(190,24,93,.06);color:#9F1239;border-color:rgba(190,24,93,.2)}
+.lab-msg:empty{display:none}
+.mono{font-family:var(--mono)}
+.sel-key{outline:2.5px solid var(--plum)!important;outline-offset:2px;background:var(--plum-bg)!important}
+.drag-ghost{position:fixed;z-index:200;pointer-events:none;opacity:.9;transform:translate(-50%,-50%) scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.drop-over{outline:2.5px dashed var(--amber-mid)!important;outline-offset:2px}
+[data-drag]{touch-action:none;cursor:grab}
+.modal-bg{position:fixed;inset:0;background:rgba(28,25,23,.38);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.modal{background:var(--s1);border-radius:16px;padding:22px 22px 18px;max-width:440px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2);max-height:90vh;overflow:auto}
+.modal h2{font-size:16px;font-weight:800;margin-bottom:10px}
+
+/* C1 진행판 — 켜지면 머리말 장식선을 빼서 첫 화면 높이를 지킨다 */
+.has-progress .site-header::after{display:none}
+.has-progress .site-header{padding-bottom:12px}
+.prog{max-width:900px;margin:8px auto 0;padding:0 24px;position:relative;z-index:1}
+.prog-row{display:flex;align-items:center;gap:8px}
+.prog-sum{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:999px;background:var(--s1);font-size:13px;font-weight:700;color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;min-height:32px}
+.prog-sum b{color:var(--amber)}
+.prog-q{font-weight:600;color:var(--dim2);font-size:12px}
+.prog-chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.prog-chip{padding:4px 10px;border-radius:999px;border:1.5px dashed var(--border);background:transparent;font-size:12px;font-weight:700;color:var(--dim2);cursor:pointer;font-family:inherit;white-space:nowrap;min-height:30px}
+.prog-chip.done{border-style:solid;border-color:rgba(21,128,61,.35);background:var(--green-bg);color:var(--green)}
+.prog-panel{margin-top:8px;background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+.prog-list{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.prog-item{display:grid;grid-template-columns:28px minmax(0,1fr) auto auto auto;gap:10px;align-items:center;font-size:13px;padding:8px 10px;border-radius:9px;background:var(--s2)}
+.prog-item.done{background:var(--green-bg)}
+.prog-item .st{font-weight:800;color:var(--dim2);white-space:nowrap}
+.prog-item.done .st{color:var(--green)}
+.prog-item .qz{font-size:12px;color:var(--dim2);white-space:nowrap}
+.prog-badge{font-size:14px;font-weight:800;color:var(--amber);margin-bottom:10px}
+@media(max-width:600px){
+  .prog{padding:0 14px;margin-top:4px}
+  .prog-sum{min-height:30px}
+  .has-progress .site-header{padding-bottom:4px}
+  .has-progress .page{padding-top:8px}
+  .has-progress .cipher-hd{margin-bottom:10px}
+  .prog-chips{display:none}
+  .prog-item{grid-template-columns:24px minmax(0,1fr) auto}
+  .prog-item .qz{grid-column:2}
+}
+.mission-pick{display:flex;gap:8px;flex-wrap:wrap}
+.kw-card{min-width:44px;min-height:44px;font-family:var(--mono);font-size:16px;font-weight:800;border:1.5px solid var(--border);border-radius:10px;background:var(--s1);cursor:pointer;color:var(--text);position:relative}
+.kw-card .ord{position:absolute;top:-8px;right:-8px;background:var(--teal);color:#fff;border-radius:999px;font-size:11px;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+.kw-card.picked{background:var(--teal-bg);border-color:var(--teal);color:var(--teal)}
+
 /* ====== Phase B: 키보드 포커스 표시 ====== */
 button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
 .slider:focus-visible{outline-offset:6px;border-radius:4px}
@@ -1523,6 +1574,7 @@ function bfPick(s,row){
   if(s===bfShift){
     document.querySelectorAll('.bf-row').forEach(r=>r.classList.remove('hit'));
     row.classList.add('hit');
+    missionDone('caesar');
     out.className='ci-out show ok';
     out.innerHTML=`💥 <b>뚫렸다!</b> 정답은 shift ${bfShift} — "${bfPlain}"<br>열쇠가 25개뿐이라 전부 시도하면 <b>반드시</b> 풀립니다. 이것이 시저 암호가 더 이상 안전하지 않은 이유예요. 현대 암호(AES-128)의 열쇠는 약 3.4×10³⁸개 — 전부 시도하는 건 사실상 불가능합니다.`;
   }else{
@@ -1566,6 +1618,7 @@ function ciTry(section,key){
     else msg='❌ 안 열려요.<br>Alice의 키로는 Bob에게 온 메시지를 열 수 없습니다.';
   }
   out.className='ci-out show '+(ok?'ok':'no');
+  if(ok)missionDone(section==='sym'?'symmetric':'pubkey');
   out.innerHTML=msg;
 }
 
@@ -1636,6 +1689,7 @@ function cipherQuiz(btn,picked,answer){
   });
   const ok=picked===answer;
   if(!ok) btn.classList.add('wrong');
+  if(ok){const mt=item.closest('.quiz-mount');quizSolved(mt.dataset.quiz,[...mt.querySelectorAll('.quiz-item')].indexOf(item));}
   const fb=item.querySelector('.quiz-fb');
   fb.className='quiz-fb show '+(ok?'ok':'no');
   fb.innerHTML=(ok?'⭕ 정답이에요! ':'❌ 아쉬워요. ')+item.dataset.explain
@@ -1710,6 +1764,217 @@ function buildControls(){
   });
 }
 
+// ======================== Phase C: 인터랙티브 확장 (FEATURES 플래그로 켜고 끔) ========================
+/* 모든 Phase C 화면은 initPhaseC()에서 플래그가 true일 때만 만들어 붙인다 → false면 기존 화면 그대로. */
+const store={   // localStorage는 막혀 있거나 깨져 있을 수 있음 → 실패해도 조용히 기본값
+  get(k){try{return window.localStorage.getItem(k);}catch(e){return null;}},
+  set(k,v){try{window.localStorage.setItem(k,v);}catch(e){}},
+  del(k){try{window.localStorage.removeItem(k);}catch(e){}},
+};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function h(html){const t=document.createElement('template');t.innerHTML=html.trim();return t.content.firstElementChild;}
+function beforeQuiz(tab,node){const m=document.querySelector(`#page-${tab} .quiz-mount`);m.parentNode.insertBefore(node,m);return node;}
+function setMsg(id,cls,html){const e=document.getElementById(id);if(!e)return;e.className='lab-msg'+(cls?' '+cls:'');e.innerHTML=html;}
+function rnd(n){return Math.floor(Math.random()*n);}
+const lbl=(f,t)=>`<label class="lbl" for="${f}" style="display:block;margin-bottom:6px">${t}</label>`;
+
+/* 끌어다 놓기(마우스·터치 공통, pointer events). src를 끌어 [data-drop] 위에 놓으면 onDrop(target).
+   끌지 않고 누르면 평소처럼 click → "고르고 → 대상 누르기"(키보드·탭)로 처리 */
+function enableDrag(src,onDrop){
+  src.setAttribute('data-drag','');
+  src.addEventListener('pointerdown',e=>{
+    if(e.button>0||src.disabled)return;
+    const sx=e.clientX,sy=e.clientY;let ghost=null,over=null;
+    const move=ev=>{
+      if(!ghost){
+        if(Math.hypot(ev.clientX-sx,ev.clientY-sy)<6)return;
+        ghost=src.cloneNode(true);ghost.classList.add('drag-ghost');ghost.removeAttribute('id');document.body.appendChild(ghost);
+      }
+      ev.preventDefault();
+      ghost.style.left=ev.clientX+'px';ghost.style.top=ev.clientY+'px';
+      const t=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('[data-drop]')||null;
+      if(t!==over){over?.classList.remove('drop-over');over=t;over?.classList.add('drop-over');}
+    };
+    const up=ev=>{
+      window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);
+      if(!ghost)return;
+      ghost.remove();over?.classList.remove('drop-over');
+      src._noClick=true;setTimeout(()=>{src._noClick=false;},0);
+      if(over&&ev.type==='pointerup')onDrop(over);
+    };
+    window.addEventListener('pointermove',move,{passive:false});
+    window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+  });
+}
+function openModal(html,onClose){
+  const prev=document.activeElement;
+  const bg=h(`<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true" tabindex="-1">${html}</div></div>`);
+  document.body.appendChild(bg);
+  const key=e=>{if(e.key==='Escape')close();};
+  const close=()=>{bg.remove();document.removeEventListener('keydown',key);onClose&&onClose();prev&&prev.focus&&prev.focus({preventScroll:true});};
+  document.addEventListener('keydown',key);
+  bg.addEventListener('click',e=>{if(e.target===bg)close();});
+  bg.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',close));
+  (bg.querySelector('[data-close]')||bg.querySelector('.modal')).focus();
+  return {el:bg,close};
+}
+
+// ---------------- C1 스파이 미션 진행판 ----------------
+const MISSIONS=[
+  {tab:'caesar',   icon:'🔄',name:'시저',     text:'브루트포스로 적의 암호문 해독하기'},
+  {tab:'railfence',icon:'🚂',name:'레일 펜스',text:'레일 수를 맞혀 쪽지 복호화하기'},
+  {tab:'columnar', icon:'📊',name:'열 전치',  text:'키워드를 읽는 순서대로 누르기'},
+  {tab:'symmetric',icon:'🔑',name:'대칭 키',  text:'"직접 해보기"에서 올바른 키로 열기'},
+  {tab:'pubkey',   icon:'🔐',name:'공개 키',  text:'"직접 해보기"에서 Bob 개인 키로 열기'},
+  {tab:'hash',     icon:'#️⃣',name:'해시',     text:'두 파일 중 변조된 파일 찾기'},
+];
+const PROG_KEY='cipher_progress_v1',INTRO_KEY='cipher_intro_seen';
+let progress={missions:{},quiz:{}};
+function loadProgress(){
+  progress={missions:{},quiz:{}};
+  let o=null;try{o=JSON.parse(store.get(PROG_KEY)||'null');}catch(e){o=null;}
+  if(!o||typeof o!=='object')return;
+  TAB_ORDER.forEach(t=>{
+    if(o.missions&&o.missions[t]===true)progress.missions[t]=true;
+    const q=o.quiz&&o.quiz[t];
+    if(Array.isArray(q))progress.quiz[t]=[...new Set(q.filter(n=>Number.isInteger(n)&&n>=0&&n<(QUIZZES[t]||[]).length))];
+  });
+}
+function saveProgress(){store.set(PROG_KEY,JSON.stringify({v:1,missions:progress.missions,quiz:progress.quiz}));}
+function missionDone(tab){
+  if(!FEATURES.progress||progress.missions[tab])return;
+  progress.missions[tab]=true;saveProgress();renderProgress();
+  const m=MISSIONS.find(x=>x.tab===tab);
+  const live=document.getElementById('progLive');
+  if(live){live.textContent=`✅ 미션 완료: ${m.name}`;clearTimeout(live._t);live._t=setTimeout(()=>{live.textContent='';},5000);}
+}
+function quizSolved(tab,qi){
+  if(!FEATURES.progress||qi<0)return;
+  const a=progress.quiz[tab]||(progress.quiz[tab]=[]);
+  if(!a.includes(qi)){a.push(qi);saveProgress();renderProgress();}
+}
+const quizTotal=t=>(QUIZZES[t]||[]).length;
+function renderProgress(){
+  if(!document.getElementById('progBoard'))return;
+  const done=MISSIONS.filter(m=>progress.missions[m.tab]).length;
+  const qDone=TAB_ORDER.reduce((s,t)=>s+(progress.quiz[t]||[]).length,0),qAll=TAB_ORDER.reduce((s,t)=>s+quizTotal(t),0);
+  document.getElementById('progCount').textContent=`${done}/6`;
+  document.getElementById('progQuiz').textContent=`· 퀴즈 ${qDone}/${qAll}`;
+  document.getElementById('progChips').innerHTML=MISSIONS.map(m=>{const d=!!progress.missions[m.tab];
+    return `<button type="button" class="prog-chip${d?' done':''}" data-go="${m.tab}" title="${m.name}: ${m.text}" aria-label="${m.name} 미션 ${d?'완료':'아직'} — 탭으로 가기">${m.icon} ${d?'✓':'○'}</button>`;}).join('');
+  document.getElementById('progList').innerHTML=MISSIONS.map(m=>{const d=!!progress.missions[m.tab],q=(progress.quiz[m.tab]||[]).length;
+    return `<li class="prog-item${d?' done':''}" data-tab="${m.tab}"><span aria-hidden="true">${m.icon}</span><span><b>${m.name}</b> — ${m.text}</span><span class="st">${d?'✅ 완료':'⬜ 아직'}</span><span class="qz">퀴즈 ${q}/${quizTotal(m.tab)}</span><button type="button" class="copy-mini" data-go="${m.tab}">가기</button></li>`;}).join('');
+  document.getElementById('progBadge').textContent=done===6?'🏅 스파이 마스터 뱃지 획득! 6개 미션을 모두 끝냈어요.':`🎖️ 미션 ${done}개 완료 — 뱃지까지 ${6-done}개 남았어요.`;
+}
+function buildProgress(){
+  loadProgress();
+  document.body.classList.add('has-progress');
+  const box=h(`<section class="prog" id="progBoard" aria-label="스파이 미션 진행판">
+    <div class="prog-row">
+      <button type="button" class="prog-sum" id="progToggle" aria-expanded="false" aria-controls="progPanel">🕵️ 스파이 미션 <b id="progCount">0/6</b><span class="prog-q" id="progQuiz"></span><span aria-hidden="true">▾</span></button>
+      <div class="prog-chips" id="progChips"></div>
+      <span class="prog-q" id="progLive" aria-live="polite"></span>
+    </div>
+    <div class="prog-panel" id="progPanel" hidden>
+      <div class="prog-badge" id="progBadge"></div>
+      <ul class="prog-list" id="progList"></ul>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="prog-q">추천 순서: 시저 → 레일 펜스 → 열 전치 → 대칭 키 → 공개 키 → 해시</span><button type="button" class="copy-mini" id="progReset" style="margin-left:auto">진행 초기화</button></div>
+    </div></section>`);
+  document.querySelector('.nav-wrap').after(box);
+  const tg=document.getElementById('progToggle'),panel=document.getElementById('progPanel');
+  tg.addEventListener('click',()=>{const open=panel.hidden;panel.hidden=!open;tg.setAttribute('aria-expanded',open);});
+  box.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)goTab(b.dataset.go,{scroll:true});});
+  document.getElementById('progReset').addEventListener('click',()=>{
+    if(!confirm('미션과 퀴즈 진행 기록을 모두 지울까요?'))return;
+    progress={missions:{},quiz:{}};store.del(PROG_KEY);renderProgress();
+  });
+  renderProgress();
+  if(!store.get(INTRO_KEY))showIntro();
+}
+function showIntro(){
+  openModal(`<h2>🕵️ 스파이 훈련에 온 걸 환영해요!</h2>
+    <p class="lab-note">탭마다 미션이 하나씩 있어요. 이 순서로 하면 쉬워요.</p>
+    <p style="font-size:15px;font-weight:800;line-height:1.8;margin-bottom:10px">추천 순서: 시저 → 레일 펜스 → 열 전치 → 대칭 키 → 공개 키 → 해시</p>
+    <p class="lab-note">진행 상황은 탭 아래 <b>🕵️ 스파이 미션</b> 버튼에서 볼 수 있어요.</p>
+    <div style="text-align:right"><button type="button" class="btn btn-cyan btn-sm" data-close>시작하기</button></div>`,
+    ()=>store.set(INTRO_KEY,'1'));
+}
+/* 미션용 새 퍼즐 3종 (레일 펜스·열 전치·해시) */
+function buildMissionPuzzles(){
+  // 레일 펜스: 레일 수 맞히기
+  const RF_PZ=['MEETATTHELIBRARY','SENDMOREPENCILS','THEPARTYISTONIGHT','OPENTHEGATEATSIX','BRINGYOURNOTEBOOK'];
+  const rf=beforeQuiz('railfence',h(`<div class="card" id="rfPuzzle"><div class="card-title">🎯 미션 — 레일 수를 맞혀 쪽지 풀기</div>
+    <p class="lab-note">친구가 레일 펜스 쪽지를 보냈는데 레일 수를 깜빡했대요. 레일 수를 골라 복호화해 보고, <b>말이 되는 문장</b>을 찾으세요!</p>
+    <div class="ci-locked" style="margin-bottom:10px">🔒 <span id="rfPzCipher"></span></div>
+    <div class="mission-pick">${[2,3,4].map(r=>`<button type="button" class="ci-key-btn" data-r="${r}">레일 ${r}개로 풀기</button>`).join('')}<button type="button" class="ci-key-btn" id="rfPzNew">🔀 새 쪽지</button></div>
+    <div class="lab-msg" id="rfPzMsg" aria-live="polite"></div></div>`));
+  let rfAns=3,rfPlain='';
+  const rfNew=()=>{rfPlain=RF_PZ[rnd(RF_PZ.length)];rfAns=2+rnd(3);document.getElementById('rfPzCipher').textContent=rfEncrypt(rfPlain,rfAns);setMsg('rfPzMsg','','');};
+  rf.querySelectorAll('[data-r]').forEach(b=>b.addEventListener('click',()=>{
+    const r=+b.dataset.r,out=rfDecrypt(rfEncrypt(rfPlain,rfAns),r);
+    if(r===rfAns){setMsg('rfPzMsg','ok',`🎉 레일 ${r}개 → <b class="mono">${out}</b> — 말이 되죠? 성공!`);missionDone('railfence');}
+    else setMsg('rfPzMsg','no',`레일 ${r}개 → <span class="mono">${out}</span> … 말이 안 되네요. 다른 레일 수로 해 보세요.`);
+  }));
+  document.getElementById('rfPzNew').addEventListener('click',rfNew);rfNew();
+
+  // 열 전치: 키워드 읽는 순서대로 누르기
+  const KW=['ZEBRA','TIGER','MOUSE','LEMON','PIANO','CLOUD','HORSE'];
+  beforeQuiz('columnar',h(`<div class="card" id="colPuzzle"><div class="card-title">🎯 미션 — 키워드 정렬 순서 맞히기</div>
+    <p class="lab-note">심화 열 전치는 키워드 글자의 <b>알파벳 순서</b>대로 열을 읽어요. 아래 글자 카드를 <b>읽는 순서대로</b> 눌러 보세요.</p>
+    <div class="mission-pick" id="colPzCards"></div>
+    <div style="margin-top:10px"><button type="button" class="ci-key-btn" id="colPzNew">🔀 새 키워드</button></div>
+    <div class="lab-msg" id="colPzMsg" aria-live="polite"></div></div>`));
+  let kw='',kwOrder=[],kwStep=0;
+  const colNew=()=>{
+    kw=KW[rnd(KW.length)];const o=getColOrder(kw);kwOrder=[...Array(kw.length).keys()].sort((a,b)=>o[a]-o[b]);kwStep=0;
+    const wrap=document.getElementById('colPzCards');
+    wrap.innerHTML=[...kw].map((c,i)=>`<button type="button" class="kw-card" data-i="${i}" aria-label="${i+1}번째 열 ${c}">${c}</button>`).join('');
+    setMsg('colPzMsg','','');
+    wrap.querySelectorAll('.kw-card').forEach(b=>b.addEventListener('click',()=>{
+      const i=+b.dataset.i;if(b.classList.contains('picked')||kwStep>=kw.length)return;
+      if(i===kwOrder[kwStep]){
+        kwStep++;b.classList.add('picked');b.insertAdjacentHTML('beforeend',`<span class="ord">${kwStep}</span>`);
+        if(kwStep===kw.length){setMsg('colPzMsg','ok',`🎉 정답! 읽는 순서: <b class="mono">${kwOrder.map(j=>kw[j]).join(' → ')}</b>`);missionDone('columnar');}
+        else setMsg('colPzMsg','',`좋아요! ${kwStep}번째는 ${kw[i]}. 다음 글자는?`);
+      } else setMsg('colPzMsg','no',`❌ ${kw[i]}보다 알파벳이 앞선 글자가 아직 남아 있어요. 남은 글자 중 가장 앞선 글자를 찾아보세요.`);
+    }));
+  };
+  document.getElementById('colPzNew').addEventListener('click',colNew);colNew();
+
+  // 해시: 변조된 파일 찾기
+  beforeQuiz('hash',h(`<div class="card" id="hashPuzzle"><div class="card-title">🎯 미션 — 변조된 파일 찾기</div>
+    <p class="lab-note">게임 설치 파일을 두 곳에서 받았어요. 공식 사이트에 적힌 SHA-256 값과 비교해서 <b>누군가 몰래 바꾼 파일</b>을 찾아내세요.</p>
+    <div class="lab-row"><div><div class="lbl" style="display:block;margin-bottom:6px">📜 공식 사이트에 적힌 해시</div><div class="hash-out" id="hzOff"></div></div></div>
+    <div class="lab-row"><div><div class="lbl" style="display:block;margin-bottom:6px">📁 파일 A의 해시</div><div class="hash-out" id="hzA"></div></div></div>
+    <div class="lab-row"><div><div class="lbl" style="display:block;margin-bottom:6px">📁 파일 B의 해시</div><div class="hash-out" id="hzB"></div></div></div>
+    <div class="mission-pick"><button type="button" class="ci-key-btn" data-f="A">파일 A가 변조됐다</button><button type="button" class="ci-key-btn" data-f="B">파일 B가 변조됐다</button><button type="button" class="ci-key-btn" id="hzNew">🔀 새 문제</button></div>
+    <div class="lab-msg" id="hzMsg" aria-live="polite"></div></div>`));
+  let bad='A',hzSeq=0;
+  const hzNew=async()=>{
+    setMsg('hzMsg','','');
+    if(!(window.crypto&&crypto.subtle)){setMsg('hzMsg','no','이 브라우저에서는 해시 계산을 지원하지 않아요.');return;}
+    const seq=++hzSeq;
+    const base=`GAME-SETUP v${1+rnd(9)}.${rnd(10)} build ${1000+rnd(9000)}`;
+    const last=base.slice(-1),evil=base.slice(0,-1)+(last==='7'?'8':'7');   // 마지막 한 글자만 바꿈
+    bad=Math.random()<.5?'A':'B';
+    const [ho,he]=await Promise.all([sha256hex(base),sha256hex(evil)]);
+    if(seq!==hzSeq)return;
+    document.getElementById('hzOff').textContent=ho;
+    document.getElementById('hzA').textContent=bad==='A'?he:ho;
+    document.getElementById('hzB').textContent=bad==='B'?he:ho;
+  };
+  document.querySelectorAll('#hashPuzzle [data-f]').forEach(b=>b.addEventListener('click',()=>{
+    const f=b.dataset.f;
+    if(f===bad){setMsg('hzMsg','ok',`🎉 정답! 파일 ${f}의 해시가 공식 값과 달라요. 내용이 단 한 글자만 바뀌어도 지문(해시)은 완전히 달라져요.`);missionDone('hash');}
+    else setMsg('hzMsg','no',`❌ 파일 ${f}의 해시는 공식 값과 똑같아요 — 같은 파일이에요. 다시 비교해 보세요.`);
+  }));
+  document.getElementById('hzNew').addEventListener('click',hzNew);hzNew();
+}
+
+function initPhaseC(){
+  if(FEATURES.progress){buildProgress();buildMissionPuzzles();}
+}
+
 // ======================== INIT ========================
 buildControls();
 initTabs();
@@ -1722,6 +1987,7 @@ colDraw(false);
 bfNew();
 if(window.crypto&&crypto.subtle){hashLive();}
 else{document.getElementById('hashAOut').textContent='이 브라우저에서는 실시간 해시 계산을 지원하지 않아요.';}
+initPhaseC();
 </script>
 </body>
 </html>
