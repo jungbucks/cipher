@@ -424,6 +424,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lb-keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .lb-key{padding:9px 13px;border-radius:9px;border:1.5px solid var(--border);background:var(--s1);font-size:13px;font-weight:700;color:var(--text);font-family:inherit;min-height:40px}
 @media(max-width:600px){.lb-stage{grid-template-columns:1fr}.lb-zone{min-height:0}}
+/* C4 해시 실험실 */
+.db-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.db-table th,.db-table td{border:1px solid var(--s3);padding:6px 9px;text-align:left}
+.db-table th{background:var(--s2);font-size:11px;color:var(--dim2)}
+.db-table td.h{font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--dim)}
+.chain{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.blk{border:2px solid rgba(21,128,61,.35);border-radius:12px;padding:10px;background:var(--s1);display:flex;flex-direction:column;gap:6px;transition:border-color .2s,background .2s}
+.blk.broken{border-color:var(--rose);background:rgba(190,24,93,.05)}
+.blk h3{font-size:13px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.blk .stt{font-size:12px;font-weight:800;color:var(--green)}
+.blk.broken .stt{color:var(--rose)}
+.blk .hh{font-family:var(--mono);font-size:11px;word-break:break-all;color:var(--dim);line-height:1.4}
+.blk .lbl2{font-size:11px;font-weight:700;color:var(--dim2)}
+@media(max-width:700px){.chain{grid-template-columns:1fr}}
 /* ====== Phase B: 키보드 포커스 표시 ====== */
 button:focus-visible,.slider:focus-visible,a:focus-visible{outline:2.5px solid var(--amber-mid);outline-offset:2px}
 .slider:focus-visible{outline-offset:6px;border-radius:4px}
@@ -2205,10 +2219,72 @@ function buildRsaLab(){
   reset();
 }
 
+// ---------------- C4 해시 실험실 (로그인 시뮬 + 블록 체인) ----------------
+function buildHashLab(){
+  beforeQuiz('hash',h(`<div class="card" id="loginLab"><div class="card-title">🔑 회원가입 · 로그인 실험 — 서버는 해시만 저장해요</div>
+    <div class="lab-msg no" style="margin:0 0 12px">⚠️ 진짜 비밀번호는 쓰지 마세요! <b>연습용 비밀번호만</b> 쓰세요. 이 실험은 화면 메모리에만 있고, <b>새로고침하면 모두 사라져요</b>.</div>
+    <div class="lab-row"><div>${lbl('hlId','아이디')}<input id="hlId" class="inp" value="student1" autocomplete="off"></div>
+      <div>${lbl('hlPw','비밀번호 (연습용)')}<input id="hlPw" class="inp" type="password" autocomplete="off" placeholder="예: 연습용 비번 1234"></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-cyan btn-sm" id="hlJoin">회원가입</button><button type="button" class="btn btn-ghost btn-sm" id="hlLogin">로그인</button></div>
+    <div class="lab-msg" id="hlMsg" aria-live="polite"></div>
+    <div class="card-title" style="margin:14px 0 0">🗄️ 서버 DB — 비밀번호 대신 해시만 있어요</div>
+    <table class="db-table"><thead><tr><th>아이디</th><th>저장된 것 (비밀번호의 SHA-256 해시)</th></tr></thead><tbody id="hlDb"></tbody></table></div>`));
+  const db=[];   // 메모리에만 (localStorage 사용 안 함)
+  const renderDb=()=>{document.getElementById('hlDb').innerHTML=db.length?db.map(u=>`<tr><td>${esc(u.id)}</td><td class="h">${u.hash}</td></tr>`).join(''):'<tr><td colspan="2" style="color:var(--dim2)">아직 가입한 사람이 없어요</td></tr>';};
+  const ok=()=>window.crypto&&crypto.subtle;
+  document.getElementById('hlJoin').addEventListener('click',async()=>{
+    if(!ok())return setMsg('hlMsg','no','이 브라우저에서는 해시 계산을 지원하지 않아요.');
+    const id=document.getElementById('hlId').value.trim(),pw=document.getElementById('hlPw').value;
+    if(!id||!pw)return setMsg('hlMsg','no','아이디와 비밀번호를 모두 넣어 주세요.');
+    if(db.some(u=>u.id===id))return setMsg('hlMsg','no','이미 있는 아이디예요. 다른 아이디로 가입하거나 로그인해 보세요.');
+    const hash=await sha256hex(pw);db.push({id,hash});renderDb();
+    setMsg('hlMsg','ok',`가입 완료! 서버에는 비밀번호 대신 해시 <span class="mono">${hash.slice(0,16)}…</span>만 저장됐어요. 이제 로그인해 보세요.`);
+    document.getElementById('hlPw').value='';
+  });
+  document.getElementById('hlLogin').addEventListener('click',async()=>{
+    if(!ok())return setMsg('hlMsg','no','이 브라우저에서는 해시 계산을 지원하지 않아요.');
+    const id=document.getElementById('hlId').value.trim(),pw=document.getElementById('hlPw').value;
+    const u=db.find(x=>x.id===id);
+    if(!u)return setMsg('hlMsg','no','그런 아이디가 없어요. 먼저 회원가입을 해 주세요.');
+    const hash=await sha256hex(pw);
+    const show=`<br>입력한 비밀번호의 해시: <span class="mono">${hash.slice(0,24)}…</span><br>DB에 저장된 해시: <span class="mono">${u.hash.slice(0,24)}…</span>`;
+    if(hash===u.hash)setMsg('hlMsg','ok','✅ 로그인 성공! 두 해시가 똑같아요. 서버는 비밀번호 원문을 몰라도 확인할 수 있어요.'+show);
+    else setMsg('hlMsg','no','❌ 로그인 실패 — 해시가 달라요. 비밀번호가 한 글자만 달라도 해시는 완전히 달라져요.'+show);
+  });
+  renderDb();
+
+  // 블록 3개 체인
+  const DEF=['Alice → Bob : 5코인','Bob → Carol : 2코인','Carol → Dave : 1코인'];
+  beforeQuiz('hash',h(`<div class="card" id="chainLab"><div class="card-title">⛓️ 블록 3개 사슬 — 기록을 몰래 고치면?</div>
+    <p class="lab-note">각 블록은 <b>바로 앞 블록의 해시</b>를 품고 있어요. 한 블록의 데이터를 고치면 그 블록의 해시가 바뀌고, 뒤에 이어진 블록들까지 연결이 모두 끊겨요. 데이터를 직접 고쳐 보세요!</p>
+    <div class="chain" id="chain">${[1,2,3].map(n=>`<div class="blk" id="blk${n}"><h3>블록 ${n}<span class="stt" id="blkSt${n}"></span></h3>
+      <label class="lbl2" for="blkData${n}">데이터</label><input class="inp" id="blkData${n}" value="${DEF[n-1]}" style="font-size:13px;padding:8px 10px">
+      <div class="lbl2">이전 블록의 해시</div><div class="hh" id="blkPrev${n}"></div>
+      <div class="lbl2">이 블록의 해시</div><div class="hh" id="blkHash${n}"></div></div>`).join('')}</div>
+    <div style="margin-top:10px"><button type="button" class="btn btn-ghost btn-sm" id="chainReset">원래대로</button></div></div>`));
+  if(!ok()){document.getElementById('chain').insertAdjacentHTML('afterend','<div class="lab-msg no">이 브라우저에서는 해시 계산을 지원하지 않아요.</div>');return;}
+  let recorded=[],cseq=0;
+  const hashes=async datas=>{let prev='0'.repeat(64);const out=[];for(let i=0;i<datas.length;i++){const hh=await sha256hex(`${i+1}|${datas[i]}|${prev}`);out.push({prev,hash:hh});prev=hh;}return out;};
+  const update=async()=>{
+    const my=++cseq;const datas=[1,2,3].map(n=>document.getElementById('blkData'+n).value);
+    const cur=await hashes(datas);if(my!==cseq)return;
+    cur.forEach((c,i)=>{const n=i+1,broken=c.hash!==recorded[i];
+      document.getElementById('blkPrev'+n).textContent=c.prev.slice(0,20)+'…';
+      document.getElementById('blkHash'+n).textContent=c.hash.slice(0,20)+'…';
+      document.getElementById('blk'+n).classList.toggle('broken',broken);
+      document.getElementById('blkSt'+n).textContent=broken?'✗ 끊김':'✓ 연결됨';
+    });
+  };
+  [1,2,3].forEach(n=>document.getElementById('blkData'+n).addEventListener('input',update));
+  document.getElementById('chainReset').addEventListener('click',()=>{[1,2,3].forEach(n=>document.getElementById('blkData'+n).value=DEF[n-1]);update();});
+  hashes(DEF).then(r=>{recorded=r.map(x=>x.hash);update();});
+}
+
 function initPhaseC(){
   if(FEATURES.progress){buildProgress();buildMissionPuzzles();}
   if(FEATURES.xorLab)buildXorLab();
   if(FEATURES.rsaLab)buildRsaLab();
+  if(FEATURES.hashLab)buildHashLab();
 }
 
 // ======================== INIT ========================
